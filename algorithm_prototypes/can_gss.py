@@ -113,7 +113,7 @@ class Region():
 		return all(dim.valid() for dim in self.dims)
 
 	def intersect(self, r2):
-		dims = [Range(0, 0), Range(0, 0)]
+		dims = [Range(0, 0) for _ in self.dims]
 
 		for i in range(0, len(self.dims)):
 			dims[i].low = max(self.dims[i].low, r2.dims[i].low)
@@ -163,6 +163,22 @@ class Region():
 			if self.dims[i].high < r2.dims[i].high:
 				return False
 		return True
+
+	def borders(self, other):
+		def expand(region, idx):
+			dims = []
+			for i in range(0, len(region.dims)):
+				dim = region.dims[i]
+				if i == idx:
+					dim = Range(dim.low-1, dim.high+1)
+				dims.append(dim)
+			return Region(*dims)
+
+		# expand in one dimension at a time and see if they intersect
+		for i in range(0, len(self.dims)):
+			r = expand(other, i)
+			if self.intersect(r) is not None:
+				return True
 
 
 class SearchRegion:
@@ -281,15 +297,27 @@ def partition(sr, n):
 	# merge the unallocated of the search region with suitable neighbors
 	for m in routing_table(n):
 		if len(partitions[m].regions) > 0:
+			con, _ = connected_search_region(partitions[m], sr)
+			partitions[m] = partitions[m].union(con)
 			# find a neighbor of node m that covers a bit of the unallocated search region
-			for o in routing_table(m):
-				intersection = sr.intersect(o.region)
-				if len(intersection.regions) > 0:
-					parts, sr = partition(sr, o)
-					for region in parts.values():
-						partitions[m] = partitions[m].union(region)
+			#for o in routing_table(m):
+			#	intersection = sr.intersect(o.region)
+			#	if len(intersection.regions) > 0:
+			#		parts, sr = partition(sr, o)
+			#		for region in parts.values():
+			#			partitions[m] = partitions[m].union(region)
 	return partitions, sr
 
+def connected_search_region(sr, unallocated):
+	connected = SearchRegion()
+	for a in sr.regions:
+		for b in unallocated.regions:
+			if a.borders(b):
+				unallocated = unallocated.subtract(b)
+				connected = connected.union(SearchRegion(b))
+				con, unallocated = connected_search_region(connected, unallocated)
+				connected = connected.union(con)
+	return connected, unallocated
 
 def compute_skyline_points(n, q):
 	print("Computing skyline points in %s" % n.name)
@@ -314,7 +342,7 @@ def compute_dominating_region(p, q):
 	dimensions = []
 	for i in range(0, len(q.dims)):
 		if q.dims[i] == QueryComponent.Min:
-			dimensions.append(Range(p[i]+1, Range.MAX))
+			dimensions.append(Range(p[i], Range.MAX))
 		if q.dims[i] == QueryComponent.Max:
 			dimensions.append(Range(0, p[i]))
 	return Region(*dimensions)
