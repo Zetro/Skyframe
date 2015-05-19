@@ -282,6 +282,104 @@ def greedy_skyline_search(n, q, sr, p):
 					for point in greedy_skyline_search(m, q, subSR, 2):
 						yield point
 
+def relaxed_skyline_search(n, q):
+	generator = relaxed_skyline_search_(n, q, None, None, 1, None)
+
+	searched = SearchRegion()
+	borderNodes = []
+	skyline = []
+
+	for points,n in generator:
+		searched = searched.union(SearchRegion(n.region))
+		borderNodes.append(n)
+		for point in points:
+			skyline.append(point)
+			yield point
+
+	print("Searched: %s" % searched)
+
+	sq_starter = None
+	for n in borderNodes:
+		if n.is_sq_starter(q):
+			sq_starter = n
+
+	p_md = compute_pmd(skyline, q)
+	print("pmd: %s" % str(p_md))
+	sr = compute_search_region(p_md, q)
+	for region in searched.regions:
+		sr = sr.subtract(region)
+	print("SR: %s" % sr)
+
+	for borderNode in borderNodes:
+		con, sr = connected_search_region(SearchRegion(borderNode.region), sr)
+		if len(con.regions) > 0:
+			for points,region in relaxed_skyline_search_(borderNode, q, None, None, 2, None):
+				for point in points:
+					yield point
+
+def relaxed_skyline_search_(n, q, d, sr, p, sp):
+	print("Running RSS (phase %d) on %s" % (p, n))
+	#print("Search region: %s" % sr)
+	if n is None:
+		print("Node is None!")
+		return
+
+	if p == 1:
+		# if n is QUERY INITIATOR
+		if d is None:
+			for dim in range(0, len(q.dims)):
+				x = find_nearer_to_border(n, q, dim)
+				for points,region in relaxed_skyline_search_(x, q, dim, None, 1, [x]):
+					yield points,region
+		else:
+			if is_border_node(n, q, d):
+				local_skyline_points = compute_skyline_points(n, q)
+				# return local skyline points
+				yield local_skyline_points, n
+				# for all neighbor Border Node nn at dimension d
+				for nn in routing_table(n):
+					if is_border_node(nn, q, d):
+						# if nn does not exist in the search path from the QUERY INITIATOR to n
+						if nn not in sp:
+							sp.append(nn)
+							for points,region in relaxed_skyline_search_(nn, q, d, None, 1, sp):
+								yield points,region
+			else:
+				x = find_nearer_to_border(n, q, d)
+				sp.append(x)
+				for points,region in relaxed_skyline_search_(x, q, d, None, 1, sp):
+					yield points,region
+	elif p == 2:
+		if not any(is_border_node(n, q, d) for d in range(0, len(q.dims))):
+			local_skyline_points = compute_skyline_points(n, q)
+			yield local_skyline_points,n
+		if not sr.is_covered_by(n.region):
+			SR = sr.subtract(n.region)
+			partitions, _ = partition(SR, n)
+			for m in routing_table(n):
+				subSR = partitions[m]
+				if m.is_in_charge_of(subSR):
+					for points in relaxed_skyline_search_(m, q, d, subSR, 2, sp):
+						yield points,region
+
+
+def find_nearer_to_border(self, q, d):
+	for m in self.neightbors:
+		if q.dims[d] == QueryComponent.Min and m.region.dims[d].low >= self.region.dims[d].low:
+			continue
+		if q.dims[d] == QueryComponent.Max and m.region.dims[d].high <= self.region.dims[d].high:
+			continue
+		return m
+	return self
+
+def is_border_node(n, q, d):
+	if q.dims[d] == QueryComponent.Min and n.region.dims[d].low > 0:
+		return False
+	if q.dims[d] == QueryComponent.Max and n.region.dims[d].high < n.region.dims[d].MAX_RANGE:
+		return False
+	return True
+
+
 def routing_table(n):
 	return n.neightbors
 
@@ -358,15 +456,9 @@ def compute_search_region(pmd, q):
 
 
 def find_node(n, p):
-	#print(n, p)
 	if all(p[i] >= n.region.dims[i].low and p[i] <= n.region.dims[i].high \
 		for i in range(0, len(n.region.dims))):
 		return n
-	#for i in range(0, len(n.region.dims)):
-	#	if p[i] < n.region.dims[i].low or p[i] > n.region.dims[i].high:
-	#		break
-	#else:
-	#	return n
 
 	for m in routing_table(n):
 		for i in range(0, len(m.region.dims)):
@@ -443,9 +535,14 @@ def main():
 	print(q)
 
 	skyline = set()
-	for point in greedy_skyline_search(n, q, None, 1):
-		print(point)
-		skyline.add(point)
+	if False:
+		generator = greedy_skyline_search(n, q, None, 1)
+	else:
+		generator = relaxed_skyline_search(n, q)
+	if generator is not None:
+		for point in generator:
+			print(point)
+			skyline.add(point)
 
 	pruned = {p for p in skyline if q.is_skyline_point(p, skyline)}
 
