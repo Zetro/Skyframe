@@ -29,7 +29,7 @@ public class CANNodeInitializer implements NodeInitializer, Control{
         System.out.println("Initializing node?: "+n);
     	cp = (CANProtocol) n.getProtocol(pid);
     	cd = (CANNodeSpecs) n.getProtocol(dim);
-    	cd.setDimensions(CANDataProvider.nextNodeInfo());
+    	cd.setLocation(CANDataProvider.nextNodeInfo());
     	cp.addNode(n);
 	}
 
@@ -40,7 +40,7 @@ public class CANNodeInitializer implements NodeInitializer, Control{
             Node n = Network.get(i);
             System.out.println("Initializing node: "+n);
             cd = (CANNodeSpecs) n.getProtocol(dim);
-            cd.setDimensions(CANDataProvider.nextNodeInfo());
+            cd.setLocation(CANDataProvider.nextNodeInfo());
             cp.addNode(n);
         }
         System.out.println("All nodes initialized");

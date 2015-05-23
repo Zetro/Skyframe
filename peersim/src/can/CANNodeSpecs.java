@@ -1,6 +1,8 @@
 package can;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
 
 import org.lsmp.djep.groupJep.GOperatorSet;
 
@@ -10,15 +12,15 @@ import peersim.core.Protocol;
 public class CANNodeSpecs implements Protocol{
 
 	private long nodeId;
-	private Double[] dimensions;
+	private Double[] location;
 	private ArrayList<Double[]> ownershipArea;
 	private ArrayList<Double[]> ownedData;
 	private ArrayList<CANNodeSpecs> neighbors;
 
 	public CANNodeSpecs(String prefix) {
-		setDimensions(new Double[6]);
-		for (int i = 0; i < dimensions.length; i++) {
-			dimensions[i] = -1.0;
+		setLocation(new Double[6]);
+		for (int i = 0; i < location.length; i++) {
+			location[i] = -1.0;
 		}
 		ownershipArea = new ArrayList<Double[]>();
 		ownedData = new ArrayList<Double[]>();
@@ -36,24 +38,24 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	public boolean isOwnerOf(CANNodeSpecs n) {
-		Double[] nDimensions = n.getDimensions();
+		Double[] nLocation = n.getLocation();
 		Double[] x_0 = ownershipArea.get(0);
 		Double[] x_1 = ownershipArea.get(1);
-		for (int i = 0; i < nDimensions.length; i++) {
-			Double coord_i = nDimensions[i];
+		for (int i = 0; i < nLocation.length; i++) {
+			Double coord_i = nLocation[i];
 			if(coord_i < x_0[i] || coord_i > x_1[i]) return false;
 		}
 		return true;
 	}
 
 	public void getHalfZoneOf(CANNodeSpecs ownerSpecs) {
-		Double[] ownerDimensions = ownerSpecs.getDimensions();
+		Double[] ownerLocation = ownerSpecs.getLocation();
 		int bestDimension = -1;
 		double dimDivision = Double.MAX_VALUE;
 		ArrayList<Double[]> ownerArea = ownerSpecs.getOwnershipArea();
-		for (int i = 0; i < ownerDimensions.length; i++) {
-			if(ownerDimensions[i] == dimensions[i]) continue;
-			double t = (ownerDimensions[i] + dimensions[i])/2;
+		for (int i = 0; i < ownerLocation.length; i++) {
+			if(ownerLocation[i] == location[i]) continue;
+			double t = (ownerLocation[i] + location[i])/2;
 			double x_0 = (ownerArea.get(0))[i];
 			double x_1 = (ownerArea.get(1))[i];
 			double center = (x_0 + x_1)/2;
@@ -66,7 +68,7 @@ public class CANNodeSpecs implements Protocol{
 		//In case two node locations repeat. We can deal with this better later on.
 		if (bestDimension == -1) throw new RuntimeException("Two nodes at same position");
 		getOwnershipArea();
-		if (dimensions[bestDimension] < dimDivision) {
+		if (location[bestDimension] < dimDivision) {
 			ArrayList<Double[]> myArea = (ArrayList<Double[]>) ownerArea.clone();
 			myArea.get(1)[bestDimension] = dimDivision;
 			ownershipArea = myArea;
@@ -83,22 +85,35 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	private void giveNeighborsTo(CANNodeSpecs newOwner) {
-		for (CANNodeSpecs neighbor : neighbors) {
-			areNeighbors(neighbor, this);
+		ArrayList<CANNodeSpecs> newOwnerNeighbors = new ArrayList<CANNodeSpecs>();
+		ListIterator<CANNodeSpecs> iterator = neighbors.listIterator();
+		while(iterator.hasNext()){
+			CANNodeSpecs next = iterator.next();
+			if(areNeighbors(newOwner, next)) newOwnerNeighbors.add(next);
+			if(!areNeighbors(next, this)) iterator.remove();
 		}
+		newOwner.setNeighbors(newOwnerNeighbors);
 	}
 
-	private static boolean areNeighbors(CANNodeSpecs one, CANNodeSpecs two) {
-		//TODO
-		ArrayList<Double[]> ownershipAreaOne = one.getOwnershipArea();
-		ArrayList<Double[]> ownershipAreaTwo = two.getOwnershipArea();
-		Double[] one_lowerBound = ownershipAreaOne.get(0);
-		Double[] one_upperBound = ownershipAreaOne.get(1);
-		Double[] two_lowerBound = ownershipAreaTwo.get(0);
-		Double[] two_upperBound = ownershipAreaTwo.get(1);
-		for (int i = 0; i < two_upperBound.length; i++) {
-			if(two_upperBound[i] == one_lowerBound[i]) return true;
-			if(one_upperBound[i] == two_lowerBound[i]) return true;
+	private static boolean areNeighbors(CANNodeSpecs a, CANNodeSpecs b) {
+		ArrayList<Double[]> ownershipAreaOne = a.getOwnershipArea();
+		ArrayList<Double[]> ownershipAreaTwo = b.getOwnershipArea();
+		Double[] a_min = ownershipAreaOne.get(0);
+		Double[] a_max = ownershipAreaOne.get(1);
+		Double[] b_min = ownershipAreaTwo.get(0);
+		Double[] b_max = ownershipAreaTwo.get(1);
+		
+		for (int i = 0; i < b_max.length; i++) {
+			if(Math.min(a_max[i], b_max[i]) == Math.max(a_min[i], b_min[i])){
+				for (int j = 0; j < b_max.length; j++) {
+					if(Math.min(a_max[j], b_max[j]) > Math.max(a_min[j], b_min[j]) || j == i){
+						  continue;
+					} else {
+						return false;
+					}
+				}
+				return true;
+			}
 		}
 		return false;
 	}
@@ -132,12 +147,12 @@ public class CANNodeSpecs implements Protocol{
 		return this.nodeId;
 	}
 
-	public Double[] getDimensions() {
-		return dimensions;
+	public Double[] getLocation() {
+		return location;
 	}
-
-	public void setDimensions(Double[] doubles) {
-		this.dimensions = doubles;
+	
+	public void setLocation(Double[] doubles) {
+		this.location = doubles;
 	}
 
 	public ArrayList<Double[]> getOwnershipArea() {
