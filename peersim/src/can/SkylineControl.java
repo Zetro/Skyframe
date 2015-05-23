@@ -14,16 +14,20 @@ import algo.Query;
 
 public class SkylineControl implements Control {
 
+    private static boolean verbose = false;
+
     private static final String PAR_PROT = "protocol";
 	private static final String DIM_PROT = "dimensions";
     private static int pid;
     private static int dim;
 
 	public SkylineControl(String prefix) {
-        System.out.println("Initializing skyline search: "+prefix);
+        if (verbose)
+            System.out.println("Initializing skyline search: "+prefix);
         pid = Configuration.getPid(prefix + "."+ PAR_PROT);
         dim = Configuration.getPid(prefix + "."+ DIM_PROT);
-        System.out.println("Initialized: "+pid+", "+dim);
+        if (verbose)
+            System.out.println("Initialized: "+pid+", "+dim);
 	}
 
     @Override
@@ -31,20 +35,23 @@ public class SkylineControl implements Control {
         if (!true) return false;
         for(int i=0; i< Network.size(); i++){
             Node n = Network.get(i);
-            System.out.println("Node: "+n);
+            if (verbose)
+                System.out.println("Node: "+n);
             CANProtocol cp = (CANProtocol) n.getProtocol(pid);
             CANNodeSpecs cd = (CANNodeSpecs) n.getProtocol(dim);
             List<Double[]> area = cd.getOwnershipArea();
-            System.out.println("Node: "+cd);
-            System.out.println("Area: ");
-            for (Double[] p : area) {
-                System.out.println(Arrays.toString(p));
+            if (verbose) {
+                System.out.println("Node: "+cd);
+                System.out.println("Area: ");
+                for (Double[] p : area) {
+                    System.out.println(Arrays.toString(p));
+                }
+                System.out.println("Neighbors: ");
+                for (CANNodeSpecs m : cd.getNeighbors()) {
+                    System.out.println(m);
+                }
+                System.out.println();
             }
-            System.out.println("Neighbors: ");
-            for (CANNodeSpecs m : cd.getNeighbors()) {
-                System.out.println(m);
-            }
-            System.out.println();
         }
 
         Node node = Network.get(0);

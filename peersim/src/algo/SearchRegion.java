@@ -14,7 +14,7 @@ public class SearchRegion {
 
 	public SearchRegion union(SearchRegion sr2) {
 		List<Region> regions = new ArrayList<>();
-		for (Region region : regions)
+		for (Region region : this.regions)
 			regions.add(region);
 		for (Region region : sr2.regions)
 			regions.add(region);

@@ -32,13 +32,20 @@ public class CANProtocol implements EDProtocol{
 	private static List<Region> processed;
 	private static List<Point> points;
 
+	private static boolean verbose = false;
+
+	private HashSet<Long> nodesInvolved = new HashSet<>();;
+	private int messageCount;
+
 	public CANProtocol(String prefix) {
-		System.out.println("Protocol loading...");
+		if (verbose)
+			System.out.println("Protocol loading...");
 		spec = Configuration.getPid(prefix + "."+ SPEC_PROT);
 //		dim = Configuration.getInt(prefix + "." + DIM_PROT);
 		networkData = CANDataProvider.generateRandomDataset(1000);//loadData();
 		nodes = new HashMap<>();
-		System.out.println("Protocol loaded: "+dim);
+		if (verbose)
+			System.out.println("Protocol loaded: "+dim);
 	}
 
 	@Override
@@ -54,18 +61,23 @@ public class CANProtocol implements EDProtocol{
 
 	@Override
 	public void processEvent(Node node, int pid, Object event) {
-		System.out.println("Event pid "+pid+", "+event);
+		if (verbose)
+			System.out.println("Event pid "+pid+", "+event);
 
+		messageCount++;
 		EventMessage msg = (EventMessage) event;
-		System.out.println("Event msg: "+msg.type+", "+msg.o);
+		if (verbose)
+			System.out.println("Event msg: "+msg.type+", "+msg.o);
 		if ("gss_init".equals(msg.type)) {
 			searchRegion = null;
 			processed = new ArrayList<>();
 			points = new ArrayList<>();
 
-			System.out.println(msg.o);
+			if (verbose)
+				System.out.println("Query: "+msg.o);
 			GSS gss = new GSS(node, pid, spec);
 			gss.greedySkylineSearch(node, (Query) msg.o, null, 1);
+			nodesInvolved.add(node.getID());
 		} else if ("gss_region".equals(msg.type)) {
 			SearchRegion sr = (SearchRegion) msg.o;
 			searchRegion = sr;
@@ -74,7 +86,8 @@ public class CANProtocol implements EDProtocol{
 			List<Point> localSkylinePoints = (List<Point>) params[0];
 			Region region = (Region) params[1];
 			processed.add(region);
-			System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size());
+			if (verbose)
+				System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size());
 			/*for (Point sp : localSkylinePoints) {
 				System.out.println(sp);
 			}*/
@@ -86,8 +99,12 @@ public class CANProtocol implements EDProtocol{
 					sr = sr.subtract(r);
 				}
 				if (sr.regions.length == 0) {
-					System.out.println("Query done!");
-					System.out.println("Skyline: "+points.size());
+					if (verbose) {
+						System.out.println("Query done!");
+						System.out.println("Skyline: "+points.size());
+					}
+					System.out.println(nodesInvolved.size());
+					System.out.println(messageCount);
 					/*for (Point p : points) {
 						System.out.println("  "+p);
 					}*/
@@ -97,10 +114,12 @@ public class CANProtocol implements EDProtocol{
 			Object[] params = (Object[]) msg.o;
 			GSS gss = new GSS((Node) params[0], pid, spec);
 			gss.greedySkylineSearch(node, (Query) params[1], (SearchRegion) params[2], (int) params[3]);
+			nodesInvolved.add(node.getID());
 		} else {
 			System.err.println("Unknown event: " + msg.type);
 		}
-		System.out.println();
+		if (verbose)
+			System.out.println();
 	}
 
 
@@ -116,7 +135,8 @@ public class CANProtocol implements EDProtocol{
 			newSpecs.setOwnershipArea(nOwnershipArea);
 			newSpecs.setOwnedData(networkData);
 			root = n;
-			System.out.println("Adding root: "+root);
+			if (verbose)
+				System.out.println("Adding root: "+root);
 			return;
 		}
 		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
@@ -126,6 +146,7 @@ public class CANProtocol implements EDProtocol{
 			//System.out.println(ownerNode.hashCode());
 			ownerNode = ownerNode.findClosestNeighborTo(newSpecs,visitedNodes);
 		}
+		if (verbose) {
             System.out.println("Area: ");
             for (Double[] p : ownerNode.getOwnershipArea()) {
                 System.out.println(Arrays.toString(p));
@@ -134,8 +155,10 @@ public class CANProtocol implements EDProtocol{
             for (Double[] p : newSpecs.getOwnershipArea()) {
                 System.out.println(Arrays.toString(p));
             }
+        }
 		newSpecs.getHalfZoneOf(ownerNode);
 		newSpecs.setNodeId(n.getID());
+		if (verbose) {
             System.out.println("New A: ");
             for (Double[] p : ownerNode.getOwnershipArea()) {
                 System.out.println(Arrays.toString(p));
@@ -144,8 +167,9 @@ public class CANProtocol implements EDProtocol{
             for (Double[] p : newSpecs.getOwnershipArea()) {
                 System.out.println(Arrays.toString(p));
             }
-                System.out.println(ownerNode);
-                System.out.println(newSpecs);
+            System.out.println(ownerNode);
+            System.out.println(newSpecs);
+        }
 	}
 
 }

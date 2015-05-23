@@ -16,6 +16,8 @@ import peersim.edsim.EDSimulator;
 // todo: s/Object/CANNodeSpecs/
 public class GSS {
 
+	private static boolean verbose = false;
+
 	public static int pid, spec;
 	public Node qi; // query initiator
 
@@ -46,7 +48,8 @@ public class GSS {
 	}
 
 	public void greedySkylineSearch(CANNodeSpecs n, Query q, SearchRegion sr, int p) {
-		System.out.println("Running GSS (phase "+p+") "+n);
+		if (verbose)
+			System.out.println("Running GSS (phase "+p+") "+n);
 		if (n == null) {
 			System.err.println("Node is null!");
 			return;
@@ -56,7 +59,8 @@ public class GSS {
 			if (isSqStarter(n, q)) {
 				List<Point> localSkylinePoints = computeSkylinePoints(n, q);
 				Point p_md = comptePmd(localSkylinePoints, q);
-				System.out.println("pmd: "+p_md);
+				if (verbose)
+					System.out.println("pmd: "+p_md);
 				SearchRegion SR = computeSearchRegion(p_md, q);
 				//System.out.println(SR);
 				EventMessage msg = new EventMessage("gss_region", SR);
@@ -174,8 +178,31 @@ public class GSS {
 			sr = sr.subtract(getRegion(m));
 		}
 		// merge the unallocated of the search region with suitable neighbors
-		// todo
+		for (Object m : routing_table(n)) {
+			if (partition.get(m).regions.length != 0) {
+				SearchRegion[] res = computeConnectedRegion(partition.get(m), sr);
+				sr = res[1];
+				partition.put(m, partition.get(m).union(res[0]));
+			}
+		}
 		return partition;
+	}
+
+	public static SearchRegion[] computeConnectedRegion(SearchRegion sr, SearchRegion unallocated) {
+		SearchRegion connected = new SearchRegion();
+		for (Region a : sr.regions) {
+			for (Region b : unallocated.regions) {
+				if (a.borders(b)) {
+					unallocated = unallocated.subtract(b);
+					connected = connected.union(new SearchRegion(b));
+					SearchRegion[] res = computeConnectedRegion(connected, unallocated);
+					SearchRegion con = res[0];
+					unallocated = res[1];
+					connected = connected.union(con);
+				}
+			}
+		}
+		return new SearchRegion[] {connected,unallocated};
 	}
 
 	public static List<Point> computeSkylinePoints(Object n, Query q) {

@@ -8,6 +8,8 @@ import peersim.dynamics.NodeInitializer;
 
 public class CANNodeInitializer implements NodeInitializer, Control{
 
+    private static boolean verbose = false;
+
     private static final String PAR_PROT = "protocol";
 	private static final String DIM_PROT = "dimensions";
     private static int pid;
@@ -16,15 +18,16 @@ public class CANNodeInitializer implements NodeInitializer, Control{
 	private CANNodeSpecs cd;
 
 	public CANNodeInitializer(String prefix) {
-        System.out.println("Initializing node: "+prefix);
+        if (verbose)
+            System.out.println("Initializing node: "+prefix);
     	pid = Configuration.getPid(prefix + "."+ PAR_PROT);
     	dim = Configuration.getPid(prefix + "."+ DIM_PROT);
-        System.out.println("Initialized: "+pid+", "+dim);
+        if (verbose)
+            System.out.println("Initialized: "+pid+", "+dim);
 	}
 
 	@Override
 	public void initialize(Node n) {
-        System.out.println("Initializing node?: "+n);
     	cp = (CANProtocol) n.getProtocol(pid);
     	cd = (CANNodeSpecs) n.getProtocol(dim);
     	cd.setLocation(CANDataProvider.nextNodeInfo());
@@ -36,12 +39,14 @@ public class CANNodeInitializer implements NodeInitializer, Control{
         cp = (CANProtocol) Network.get(0).getProtocol(pid);
         for(int i=0; i< Network.size(); i++){
             Node n = Network.get(i);
-            System.out.println("Initializing node: "+n);
+            if (verbose)
+                System.out.println("Initializing node: "+n);
             cd = (CANNodeSpecs) n.getProtocol(dim);
             cd.setLocation(CANDataProvider.nextNodeInfo());
             cp.addNode(n);
         }
-        System.out.println("All nodes initialized");
+        if (verbose)
+            System.out.println("All nodes initialized");
         return false;
     }
 }

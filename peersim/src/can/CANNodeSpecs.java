@@ -7,8 +7,6 @@ import java.util.ListIterator;
 
 import org.lsmp.djep.groupJep.GOperatorSet;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
-
 import peersim.core.Node;
 import peersim.core.Protocol;
 

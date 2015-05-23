@@ -84,6 +84,29 @@ public class Region {
 		return true;
 	}
 
+	private static Region expand(Region region, int idx) {
+		double epsilon = 0.000001;
+		Range[] dims = new Range[region.dims.length];
+		for (int i=0; i<region.dims.length; i++) {
+			Range dim = region.dims[i];
+			if (i==idx) {
+				dim = new Range(dim.low-epsilon, dim.high+epsilon);
+			}
+			dims[i] = dim;
+		}
+		return new Region(dims);
+	}
+
+	public boolean borders(Region other) {
+		// todo: in some better way
+		for (int i=0; i<dims.length; i++) {
+			Region r = expand(other, i);
+			if (intersect(r) != null)
+				return true;
+		}
+		return false;
+	}
+
 	@Override
 	public int hashCode() {
 		int hash = 7;
