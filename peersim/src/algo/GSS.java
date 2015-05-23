@@ -120,9 +120,13 @@ public class GSS {
 
 	public static boolean isInChargeOf(Object node, SearchRegion sr) {
 		 // todo? same as in python version but makes no sense
-		if (sr.regions.length == 0)
-			return false;
-		return true;
+		Region nodeRegion = getRegion(node);
+		for (Region r: sr.regions) {
+			if (r.intersect(nodeRegion) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static Object findNearerNode(Object node, Query q) {

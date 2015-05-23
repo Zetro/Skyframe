@@ -55,13 +55,11 @@ public class SkylineControl implements Control {
         }
 
         Node node = Network.get(0);
-        EventMessage msg = new EventMessage("gss_init", new Query(
-            Query.Component.Min,
-            Query.Component.Min,
-            Query.Component.Min,
-            Query.Component.Min,
-            Query.Component.Min,
-            Query.Component.Min));
+        Query.Component[] query = new Query.Component[Configuration.getInt(DIM_PROT)];
+        for (int i=0; i< query.length; i++) {
+        	query[i] = Query.Component.Min;
+        }
+        EventMessage msg = new EventMessage("gss_init", new Query(query));
         EDSimulator.add(1, msg, node, pid);
         return false;
     }
