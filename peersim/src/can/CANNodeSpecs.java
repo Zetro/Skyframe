@@ -205,7 +205,7 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	private double recCalc(Double[] max, Double[] min, Double[] mid, Double[] calc, Double[] location, int i) {
-		if(i == calc.length-1){
+		if(i == calc.length){
 			return euclideanDistance(calc, location);
 		}
 		calc[i] = min[i];

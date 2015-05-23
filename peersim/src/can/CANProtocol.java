@@ -19,7 +19,7 @@ public class CANProtocol implements EDProtocol{
 	private Node root;
 
 	private static final String PAR_PROT = "protocol";
-	private static final String DIM_PROT = "dimensions";
+//	private static final String DIM_PROT = "dimensions";
 	private static final String SPEC_PROT = "nodespec";
 	private static int dim;
 	private static int spec;
@@ -28,7 +28,7 @@ public class CANProtocol implements EDProtocol{
 	public CANProtocol(String prefix) {
 		System.out.println("Protocol loading...");
 		spec = Configuration.getPid(prefix + "."+ SPEC_PROT);
-		dim = Configuration.getInt(DIM_PROT);
+//		dim = Configuration.getInt(prefix + "." + DIM_PROT);
 		networkData = CANDataProvider.loadData();
 		nodes = new HashMap<>();
 		System.out.println("Protocol loaded: "+dim);
@@ -87,7 +87,7 @@ public class CANProtocol implements EDProtocol{
 			System.out.println("Adding root: "+root);
 			return;
 		}
-		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(dim);
+		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
 		while(!ownerNode.isOwnerOf(newSpecs)){
 			//System.out.println(ownerNode.hashCode());
 			ownerNode = ownerNode.findClosestNeighborTo(newSpecs);
