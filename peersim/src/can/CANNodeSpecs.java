@@ -184,8 +184,39 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	private double calcMinDistanceTo(CANNodeSpecs newSpecs) {
-		//TODO
+		Double[] max = ownershipArea.get(0);
+		Double[] min = ownershipArea.get(1);
+		Double[] mid = new Double[max.length];
+		for (int i = 0; i < mid.length; i++) {
+			mid[i] = (max[i]+min[i])/2;
+		}
+		Double[] calc = new Double[max.length];
+		recCalc(max, min, mid, calc, newSpecs.getLocation(), 0);
 		return 0.0;
+	}
+
+	private double recCalc(Double[] max, Double[] min, Double[] mid, Double[] calc, Double[] location, int i) {
+		if(i == calc.length-1){
+			return euclideanDistance(calc, location);
+		}
+		calc[i] = min[i];
+		Double[] clone_min = calc.clone();
+		double min_r = recCalc(max, min, mid, clone_min, location, i+1);
+		calc[i] = max[i];
+		Double[] clone_max = calc.clone();
+		double max_r = recCalc(max, min, mid, clone_max, location, i+1);
+		calc[i] = mid[i];
+		Double[] clone_mid = calc.clone();
+		double mid_r = recCalc(max, min, mid, clone_mid, location, i+1);
+		return Math.min(max_r, Math.min(min_r, mid_r));
+	}
+
+	private double euclideanDistance(Double[] calc, Double[] location) {
+		double result = 0.0;
+		for (int i = 0; i < location.length; i++) {
+			result += Math.pow(calc[i] - location[i],2);
+		}
+		return result;
 	}
 
 }

@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import peersim.config.Configuration;
-import peersim.core.Network;
 import peersim.core.Node;
-import peersim.core.Protocol;
 import peersim.edsim.EDProtocol;
 
 public class CANProtocol implements EDProtocol{

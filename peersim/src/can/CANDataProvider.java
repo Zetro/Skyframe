@@ -8,8 +8,6 @@ import java.util.ArrayList;
 
 import peersim.config.Configuration;
 import peersim.core.CommonState;
-import peersim.core.Control;
-import peersim.core.Network;
 
 public class CANDataProvider{
 
