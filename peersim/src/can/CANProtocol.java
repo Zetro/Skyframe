@@ -36,7 +36,7 @@ public class CANProtocol implements EDProtocol{
 		System.out.println("Protocol loading...");
 		spec = Configuration.getPid(prefix + "."+ SPEC_PROT);
 //		dim = Configuration.getInt(prefix + "." + DIM_PROT);
-		networkData = CANDataProvider.loadData();
+		networkData = CANDataProvider.generateRandomDataset(1000);//loadData();
 		nodes = new HashMap<>();
 		System.out.println("Protocol loaded: "+dim);
 	}
@@ -70,14 +70,14 @@ public class CANProtocol implements EDProtocol{
 			SearchRegion sr = (SearchRegion) msg.o;
 			searchRegion = sr;
 		} else if ("gss_result".equals(msg.type)) {
-			System.out.println("Recieved results: ");
 			Object[] params = (Object[]) msg.o;
 			List<Point> localSkylinePoints = (List<Point>) params[0];
 			Region region = (Region) params[1];
 			processed.add(region);
-			for (Point sp : localSkylinePoints) {
+			System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size());
+			/*for (Point sp : localSkylinePoints) {
 				System.out.println(sp);
-			}
+			}*/
 			points.addAll(localSkylinePoints);
 
 			if (searchRegion != null) {
@@ -87,10 +87,10 @@ public class CANProtocol implements EDProtocol{
 				}
 				if (sr.regions.length == 0) {
 					System.out.println("Query done!");
-					System.out.println("Skyline:");
-					for (Point p : points) {
+					System.out.println("Skyline: "+points.size());
+					/*for (Point p : points) {
 						System.out.println("  "+p);
-					}
+					}*/
 				}
 			}
 		} else if ("gss_next".equals(msg.type)) {
