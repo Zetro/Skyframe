@@ -13,6 +13,7 @@ import peersim.edsim.EDProtocol;
 import algo.GSS;
 import algo.Point;
 import algo.Query;
+import algo.Region;
 import algo.SearchRegion;
 
 import java.util.*;
@@ -28,6 +29,10 @@ public class CANProtocol implements EDProtocol{
 	private static int dim;
 	private static int spec;
 	private ArrayList<Double[]> networkData;
+
+	private static SearchRegion searchRegion;
+	private static List<Region> processed;
+	private static List<Point> points;
 
 	public CANProtocol(String prefix) {
 		System.out.println("Protocol loading...");
@@ -56,16 +61,39 @@ public class CANProtocol implements EDProtocol{
 		EventMessage msg = (EventMessage) event;
 		System.out.println("Event msg: "+msg.type+", "+msg.o);
 		if ("gss_init".equals(msg.type)) {
+			searchRegion = null;
+			processed = new ArrayList<>();
+			points = new ArrayList<>();
+
 			System.out.println(msg.o);
 			GSS gss = new GSS(node, pid, spec);
 			gss.greedySkylineSearch(node, (Query) msg.o, null, 1);
+		} else if ("gss_region".equals(msg.type)) {
+			SearchRegion sr = (SearchRegion) msg.o;
+			searchRegion = sr;
 		} else if ("gss_result".equals(msg.type)) {
-			// todo: need to know when finished.
-			//       send region skyline belong to,subtract from inital SR, done when empty
 			System.out.println("Recieved results: ");
-			List<Point> localSkylinePoints = (List<Point>) msg.o;
+			Object[] params = (Object[]) msg.o;
+			List<Point> localSkylinePoints = (List<Point>) params[0];
+			Region region = (Region) params[1];
+			processed.add(region);
 			for (Point sp : localSkylinePoints) {
 				System.out.println(sp);
+			}
+			points.addAll(localSkylinePoints);
+
+			if (searchRegion != null) {
+				SearchRegion sr = searchRegion;
+				for (Region r : processed) {
+					sr = sr.subtract(r);
+				}
+				if (sr.regions.length == 0) {
+					System.out.println("Query done!");
+					System.out.println("Skyline:");
+					for (Point p : points) {
+						System.out.println("  "+p);
+					}
+				}
 			}
 		} else if ("gss_next".equals(msg.type)) {
 			Object[] params = (Object[]) msg.o;

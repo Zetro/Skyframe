@@ -6,7 +6,7 @@ import java.util.List;
 
 public class SearchRegion {
 
-	Region[] regions;
+	public Region[] regions;
 
 	public SearchRegion(Region... regions) {
 		this.regions = regions;
@@ -35,7 +35,6 @@ public class SearchRegion {
 		List<Region> regions = new ArrayList<>();
 		for (Region search_region : this.regions) {
 			Region inter = search_region.intersect(r);
-				System.out.println("> "+inter);
 			if (inter != null) {
 				Region[] sub = search_region.subtract(r);
 				for (Region region : sub) {

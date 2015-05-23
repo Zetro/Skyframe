@@ -35,8 +35,8 @@ public class GSS {
 		EventMessage msg = new EventMessage("gss_next", new Object[]{qi,q,sr,p});
 		EDSimulator.add(1, msg, node, pid);
 	}
-	public void sendResult(Node node, List<Point> localSkylinePoints) {
-		EventMessage msg = new EventMessage("gss_result", localSkylinePoints);
+	public void sendResult(Node node, List<Point> localSkylinePoints, Region region) {
+		EventMessage msg = new EventMessage("gss_result", new Object[]{localSkylinePoints,region});
 		EDSimulator.add(1, msg, node, pid);
 	}
 
@@ -58,23 +58,19 @@ public class GSS {
 				Point p_md = comptePmd(localSkylinePoints, q);
 				System.out.println("pmd: "+p_md);
 				SearchRegion SR = computeSearchRegion(p_md, q);
-				System.out.println(SR);
+				//System.out.println(SR);
+				EventMessage msg = new EventMessage("gss_region", SR);
+				EDSimulator.add(0, msg, qi, pid);
 				// Partition SR into a disjoint set of subSRs for neighbornodes in RT(n)
 				Map<Object, SearchRegion> partition = partition(SR, n);
 				for (Object m : routing_table(n)) {
 					SearchRegion subSR = partition.get(m);
-					System.out.println(subSR + " "+partition.containsKey(m));
-					System.out.println(partition);
-					System.out.println(m);
 					if (isInChargeOf(m, subSR)) {
-						System.out.println("!!!");
 						sendGSS(m, q, subSR, 2);
-					} else {
-						System.out.println(":( " + subSR.regions.length);
 					}
 				}
 				// return local skyline points
-				sendResult(qi, localSkylinePoints);
+				sendResult(qi, localSkylinePoints, getRegion(n));
 			} else {
 				Object x = findNearerNode(n, q);
 				sendGSS(x, q, sr, 1);
@@ -82,7 +78,7 @@ public class GSS {
 		} else if (p == 2) {
 			List<Point> localSkylinePoints = computeSkylinePoints(n, q);
 			// return local skyline points
-			sendResult(qi, localSkylinePoints);
+			sendResult(qi, localSkylinePoints, getRegion(n));
 			if (!sr.isCoveredBy(getRegion(n))) {
 				SearchRegion SR = sr.subtract(getRegion(n));
 				Map<Object, SearchRegion> partition = partition(SR, n);
@@ -172,7 +168,6 @@ public class GSS {
 		// give a sub search region to the current node
 		partition.put(n, sr.intersect(getRegion(n)));
 		sr = sr.subtract(getRegion(n));
-		System.out.println(sr);
 		// give a sub search region to each of its neighbors
 		for (Object m : routing_table(n)) {
 			partition.put(m, sr.intersect(getRegion(m)));
@@ -235,19 +230,8 @@ public class GSS {
 		SearchRegion full = new SearchRegion(new Region(full_ranges));
 		if (pmd == null)
 			return full;
-		System.out.println("----");
-		System.out.println(full);
 		Region dominating = computeDominatingRegion(pmd, q);
 		SearchRegion sr = full.subtract(dominating);
-		System.out.println(dominating);
-		System.out.println(sr);
-		System.out.println("----");
-		Region r = new Region(new Range(0, 1));
-		Region r2 = new Region(new Range(0, 0.2));
-		System.out.println(r + " " + r.hashCode());
-		System.out.println(r2 + " " + r2.hashCode());
-		System.out.println(Arrays.toString(r.subtract(r2)));
-		System.out.println("----");
 		return sr;
 	}
 }

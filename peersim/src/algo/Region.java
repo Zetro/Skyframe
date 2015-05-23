@@ -43,12 +43,6 @@ public class Region {
 			}
 		}
 		Region r = new Region(dims);
-		System.out.println(r + " " + r.isValid() + " " + regions.contains(r));
-		System.out.println("O:"+regions);
-		if (regions.size() == 1) {
-			System.out.println(":"+regions.get(0).equals(r));
-		}
-		System.out.println();
 		if (r.isValid() && !regions.contains(r)) {
 			regions.add(r);
 		}
@@ -77,8 +71,6 @@ public class Region {
 			addRegionIfValid(regions, dims_low);
 			addRegionIfValid(regions, dims_high);
 		}
-		System.out.println("L:"+regions);
-		System.out.println();
 
 		return regions.toArray(new Region[regions.size()]);
 	}
