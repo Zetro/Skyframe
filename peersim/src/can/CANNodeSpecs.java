@@ -198,7 +198,7 @@ public class CANNodeSpecs implements Protocol{
 		for (CANNodeSpecs neighbor : neighbors) {
 			if(neighbor.isOwnerOf(newSpecs)) return neighbor;
 			else if (visitedNodes.contains(neighbor)) continue;
-			double distance = neighbor.calcMinDistanceTo(newSpecs);
+			double distance = neighbor.calcOptDistanceTo(newSpecs);
 			if(distance < minDist) {
 				minDist = distance;
 				winningNeighbor = neighbor;
@@ -207,7 +207,18 @@ public class CANNodeSpecs implements Protocol{
 		visitedNodes.add(winningNeighbor);
 		return winningNeighbor;
 	}
-
+	
+	private double calcOptDistanceTo(CANNodeSpecs newSpecs) {
+		Double[] min = ownershipArea.get(0);
+		Double[] max = ownershipArea.get(1);
+		Double[] point = new Double[max.length];
+		Double[] target = newSpecs.getLocation();
+		for (int i = 0; i < max.length; i++) {
+			point[i] = Math.max(Math.min(max[i], target[i]),min[i]);
+		}
+		return euclideanDistance(target, point);
+	}
+	
 	private double calcMinDistanceTo(CANNodeSpecs newSpecs) {
 		Double[] max = ownershipArea.get(0);
 		Double[] min = ownershipArea.get(1);
