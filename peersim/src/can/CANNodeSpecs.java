@@ -133,7 +133,9 @@ public class CANNodeSpecs implements Protocol{
 		ArrayList<Double[]> newOwnerArea = newOwner.getOwnershipArea();
 		Double[] lowerBound = newOwnerArea.get(0);
 		Double[] upperBound = newOwnerArea.get(1);
-		for (Double[] data : ownedData) {
+		ListIterator<Double[]> iterator = ownedData.listIterator();
+		while(iterator.hasNext()) {
+			Double[] data = iterator.next();
 			boolean belongsToNewOwner = true;
 			for (int i = 0; i < data.length; i++) {
 				if(data[i] < lowerBound[i] || data[i] > upperBound[i]){
@@ -143,7 +145,7 @@ public class CANNodeSpecs implements Protocol{
 			}
 			if(belongsToNewOwner){
 				giveAwayData.add(data);
-				ownedData.remove(data);
+				iterator.remove();
 			}
 		}
 		newOwner.setOwnedData(giveAwayData);
@@ -193,6 +195,7 @@ public class CANNodeSpecs implements Protocol{
 		double minDist = Double.POSITIVE_INFINITY;
 		CANNodeSpecs winningNeighbor = null;
 		for (CANNodeSpecs neighbor : neighbors) {
+			if(neighbor.isOwnerOf(newSpecs)) return neighbor;
 			double distance = neighbor.calcMinDistanceTo(newSpecs);
 			if(distance < minDist) {
 				minDist = distance;
@@ -210,8 +213,7 @@ public class CANNodeSpecs implements Protocol{
 			mid[i] = (max[i]+min[i])/2;
 		}
 		Double[] calc = new Double[max.length];
-		recCalc(max, min, mid, calc, newSpecs.getLocation(), 0);
-		return 0.0;
+		return recCalc(max, min, mid, calc, newSpecs.getLocation(), 0);
 	}
 
 	private double recCalc(Double[] max, Double[] min, Double[] mid, Double[] calc, Double[] location, int i) {
