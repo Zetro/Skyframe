@@ -11,12 +11,13 @@ import peersim.core.Protocol;
 
 public class CANNodeSpecs implements Protocol{
 
+	private long nodeId;
 	private Double[] location;
 	private ArrayList<Double[]> ownershipArea;
 	private ArrayList<Double[]> ownedData;
 	private ArrayList<CANNodeSpecs> neighbors;
 
-	public CANNodeSpecs() {
+	public CANNodeSpecs(String prefix) {
 		setLocation(new Double[6]);
 		for (int i = 0; i < location.length; i++) {
 			location[i] = -1.0;
@@ -25,7 +26,7 @@ public class CANNodeSpecs implements Protocol{
 		ownedData = new ArrayList<Double[]>();
 		setNeighbors(new ArrayList<CANNodeSpecs>());
 	}
-	
+
 	@Override
 	public Object clone(){
 		Object clone = null;
@@ -46,7 +47,7 @@ public class CANNodeSpecs implements Protocol{
 		}
 		return true;
 	}
-	
+
 	public void getHalfZoneOf(CANNodeSpecs ownerSpecs) {
 		Double[] ownerLocation = ownerSpecs.getLocation();
 		int bestDimension = -1;
@@ -93,7 +94,7 @@ public class CANNodeSpecs implements Protocol{
 		}
 		newOwner.setNeighbors(newOwnerNeighbors);
 	}
-	
+
 	private static boolean areNeighbors(CANNodeSpecs a, CANNodeSpecs b) {
 		ArrayList<Double[]> ownershipAreaOne = a.getOwnershipArea();
 		ArrayList<Double[]> ownershipAreaTwo = b.getOwnershipArea();
@@ -138,6 +139,14 @@ public class CANNodeSpecs implements Protocol{
 		newOwner.setOwnedData(giveAwayData);
 	}
 
+	public void setNodeId(long id) {
+		this.nodeId = id;
+	}
+
+	public long getNodeId() {
+		return this.nodeId;
+	}
+
 	public Double[] getLocation() {
 		return location;
 	}
@@ -153,7 +162,7 @@ public class CANNodeSpecs implements Protocol{
 	public void setOwnershipArea(ArrayList<Double[]> ownershipArea) {
 		this.ownershipArea = ownershipArea;
 	}
-	
+
 	public ArrayList<Double[]> getOwnedData() {
 		return ownedData;
 	}
