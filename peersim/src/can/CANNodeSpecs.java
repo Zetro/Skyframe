@@ -1,6 +1,8 @@
 package can;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
 
 import org.lsmp.djep.groupJep.GOperatorSet;
 
@@ -82,9 +84,14 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	private void giveNeighborsTo(CANNodeSpecs newOwner) {
-		for (CANNodeSpecs neighbor : neighbors) {
-			areNeighbors(neighbor, this);
+		ArrayList<CANNodeSpecs> newOwnerNeighbors = new ArrayList<CANNodeSpecs>();
+		ListIterator<CANNodeSpecs> iterator = neighbors.listIterator();
+		while(iterator.hasNext()){
+			CANNodeSpecs next = iterator.next();
+			if(areNeighbors(newOwner, next)) newOwnerNeighbors.add(next);
+			if(!areNeighbors(next, this)) iterator.remove();
 		}
+		newOwner.setNeighbors(newOwnerNeighbors);
 	}
 	
 	private static boolean areNeighbors(CANNodeSpecs a, CANNodeSpecs b) {
