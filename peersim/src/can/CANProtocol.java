@@ -15,6 +15,8 @@ import algo.Point;
 import algo.Query;
 import algo.SearchRegion;
 
+import java.util.*;
+
 public class CANProtocol implements EDProtocol{
 
 	public HashMap<Long, Node> nodes;
@@ -52,6 +54,7 @@ public class CANProtocol implements EDProtocol{
 		System.out.println("Event pid "+pid+", "+event);
 
 		EventMessage msg = (EventMessage) event;
+		System.out.println("Event msg: "+msg.type+", "+msg.o);
 		if ("gss_init".equals(msg.type)) {
 			System.out.println(msg.o);
 			GSS gss = new GSS(node, pid, spec);
@@ -71,10 +74,12 @@ public class CANProtocol implements EDProtocol{
 		} else {
 			System.err.println("Unknown event: " + msg.type);
 		}
+		System.out.println();
 	}
 
 
 	public void addNode(Node n) {
+		nodes.put(n.getID(), n);
 		CANNodeSpecs newSpecs = (CANNodeSpecs) n.getProtocol(spec);
 		if (root == null){
 			ArrayList<Double[]> nOwnershipArea = new ArrayList<Double[]>();
@@ -85,17 +90,34 @@ public class CANProtocol implements EDProtocol{
 			newSpecs.setOwnershipArea(nOwnershipArea);
 			newSpecs.setOwnedData(networkData);
 			root = n;
-			nodes.put(n.getID(), n);
 			System.out.println("Adding root: "+root);
 			return;
 		}
-		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(dim);
+		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
 		while(!ownerNode.isOwnerOf(newSpecs)){
 			//System.out.println(ownerNode.hashCode());
 			ownerNode = ownerNode.findClosestNeighborTo(newSpecs);
 		}
+            System.out.println("Area: ");
+            for (Double[] p : ownerNode.getOwnershipArea()) {
+                System.out.println(Arrays.toString(p));
+            }
+            System.out.println("Spec: ");
+            for (Double[] p : newSpecs.getOwnershipArea()) {
+                System.out.println(Arrays.toString(p));
+            }
 		newSpecs.getHalfZoneOf(ownerNode);
 		newSpecs.setNodeId(n.getID());
+            System.out.println("New A: ");
+            for (Double[] p : ownerNode.getOwnershipArea()) {
+                System.out.println(Arrays.toString(p));
+            }
+            System.out.println("New B: ");
+            for (Double[] p : newSpecs.getOwnershipArea()) {
+                System.out.println(Arrays.toString(p));
+            }
+                System.out.println(ownerNode);
+                System.out.println(newSpecs);
 	}
 
 }

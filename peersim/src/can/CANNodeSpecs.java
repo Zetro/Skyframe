@@ -9,6 +9,8 @@ import org.lsmp.djep.groupJep.GOperatorSet;
 import peersim.core.Node;
 import peersim.core.Protocol;
 
+import java.util.*;
+
 public class CANNodeSpecs implements Protocol{
 
 	private long nodeId;
@@ -68,13 +70,21 @@ public class CANNodeSpecs implements Protocol{
 		//In case two node locations repeat. We can deal with this better later on.
 		if (bestDimension == -1) throw new RuntimeException("Two nodes at same position");
 		getOwnershipArea();
+
+		ArrayList<Double[]> myArea = (ArrayList<Double[]>) ownerArea.clone();
+		myArea = new ArrayList<>();
+		for (Double[] p : ownerArea) {
+			Double[] newp = new Double[p.length];
+			for (int i=0; i<p.length; i++) {
+				newp[i] = p[i];
+			}
+			myArea.add(newp);
+		}
 		if (location[bestDimension] < dimDivision) {
-			ArrayList<Double[]> myArea = (ArrayList<Double[]>) ownerArea.clone();
 			myArea.get(1)[bestDimension] = dimDivision;
 			ownershipArea = myArea;
 			ownerArea.get(0)[bestDimension] = dimDivision;
 		} else {
-			ArrayList<Double[]> myArea = (ArrayList<Double[]>) ownerArea.clone();
 			myArea.get(0)[bestDimension] = dimDivision;
 			ownerArea.get(1)[bestDimension] = dimDivision;
 		}
