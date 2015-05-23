@@ -15,13 +15,14 @@ public class CANDataProvider{
 	private static String dataSourceFile = Configuration.getString(DATA_SOURCE_FILE);
 
 //	Loads the dataSet referred by DATA_SOURCE_FILE and return as an Arraylist of double's
-	public static ArrayList<Double[]> loadData() {
+	public static ArrayList<Double[]> loadData(long dataSetSize) {
 		double maxValueOfData = Double.NEGATIVE_INFINITY;
 		ArrayList<Double[]> data = new ArrayList<Double[]>();;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(dataSourceFile));
 			String line;
-			while((line = br.readLine()) != null){
+			long c = 0;
+			while((line = br.readLine()) != null && c < dataSetSize){
 				String[] temp = line.split(",");
 				Double dataDimensions[] = new Double[temp.length];
 				for (int i = 0; i < temp.length; i++) {
@@ -29,6 +30,7 @@ public class CANDataProvider{
 					if(dataDimensions[i] > maxValueOfData) maxValueOfData = dataDimensions[i];
 				}
 				data.add(dataDimensions);
+				c++;
 			}
 			br.close();
 		} catch (FileNotFoundException e) {
@@ -49,18 +51,24 @@ public class CANDataProvider{
 		return doubles;
 	}
 
-	public static ArrayList<Double[]> generateRandomDataset(long dataSize) {
+	public static ArrayList<Double[]> generateRandomDataset(long dataSize, int dim) {
 		ArrayList<Double[]> data = new ArrayList<Double[]>();
-		for (int i = 0; i < dataSize; i++) {
-			Double[] randomCoord = {CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble()};
+		for (long i = 0; i < dataSize; i++) {
+			Double[] randomCoord = new Double[dim];
+			for (int j = 0; j < randomCoord.length; j++) {
+				randomCoord[j] = CommonState.r.nextDouble();
+			}
 			data.add(randomCoord);
 		}
 		return data;
 	}
 
 //	Used to generate new random node position
-	public static Double[] nextNodeInfo(){
-		Double[] randomCoord = {CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble()};
+	public static Double[] nextNodeInfo(int dim){
+		Double[] randomCoord = new Double[dim];
+		for (int i = 0; i < randomCoord.length; i++){
+			randomCoord[i] = CommonState.r.nextDouble();
+		}
 		return  randomCoord;
 	}
 

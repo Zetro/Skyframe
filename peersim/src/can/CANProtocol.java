@@ -21,8 +21,10 @@ public class CANProtocol implements EDProtocol{
 	public HashMap<Long, Node> nodes;
 	private Node root;
 
+	private static final String DIMENSIONS = "dimensions";
+	private static final String DATA_SET_SIZE = "dataSetSize";
+	private static final String IS_RANDOM_DATA = "isRandomData";
 	private static final String PAR_PROT = "protocol";
-//	private static final String DIM_PROT = "dimensions";
 	private static final String SPEC_PROT = "nodespec";
 	private static int dim;
 	private static int spec;
@@ -41,8 +43,14 @@ public class CANProtocol implements EDProtocol{
 		if (verbose)
 			System.out.println("Protocol loading...");
 		spec = Configuration.getPid(prefix + "."+ SPEC_PROT);
-//		dim = Configuration.getInt(prefix + "." + DIM_PROT);
-		networkData = CANDataProvider.generateRandomDataset(1000);//loadData();
+		boolean isRandomData = Configuration.getBoolean(IS_RANDOM_DATA);
+		long dataSetSize = Configuration.getLong(DATA_SET_SIZE);
+		dim = Configuration.getInt(DIMENSIONS);
+		if(isRandomData){
+			networkData = CANDataProvider.generateRandomDataset(dataSetSize, dim);
+		} else {
+			networkData = CANDataProvider.loadData(dataSetSize);
+		}
 		nodes = new HashMap<>();
 		if (verbose)
 			System.out.println("Protocol loaded: "+dim);
@@ -128,8 +136,12 @@ public class CANProtocol implements EDProtocol{
 		CANNodeSpecs newSpecs = (CANNodeSpecs) n.getProtocol(spec);
 		if (root == null){
 			ArrayList<Double[]> nOwnershipArea = new ArrayList<Double[]>();
-			Double[] t_0 = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-			Double[] t_1 = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+			Double[] t_0 = new Double[dim];
+			Double[] t_1 = new Double[dim];
+			for (int i = 0; i < dim; i++) {
+				t_0[i] = 0.0;
+				t_1[i] = 1.0;
+			}
 			nOwnershipArea.add(t_0);
 			nOwnershipArea.add(t_1);
 			newSpecs.setOwnershipArea(nOwnershipArea);
@@ -140,11 +152,9 @@ public class CANProtocol implements EDProtocol{
 			return;
 		}
 		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
-		HashSet<CANNodeSpecs> visitedNodes = new HashSet<CANNodeSpecs>();
-		visitedNodes.add(ownerNode);
 		while(!ownerNode.isOwnerOf(newSpecs)){
-			//System.out.println(ownerNode.hashCode());
-			ownerNode = ownerNode.findClosestNeighborTo(newSpecs,visitedNodes);
+			CANNodeSpecs oldNode = ownerNode;
+			ownerNode = ownerNode.findClosestNeighborTo(newSpecs);
 		}
 		if (verbose) {
             System.out.println("Area: ");

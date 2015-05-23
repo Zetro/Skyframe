@@ -2,15 +2,9 @@ package can;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.ListIterator;
 
-import org.lsmp.djep.groupJep.GOperatorSet;
-
-import peersim.core.Node;
 import peersim.core.Protocol;
-
-import java.util.*;
 
 public class CANNodeSpecs implements Protocol{
 
@@ -198,22 +192,31 @@ public class CANNodeSpecs implements Protocol{
 		this.neighbors = neighbors;
 	}
 
-	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs, HashSet<CANNodeSpecs> visitedNodes) {
+	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs) {
 		double minDist = Double.POSITIVE_INFINITY;
 		CANNodeSpecs winningNeighbor = null;
 		for (CANNodeSpecs neighbor : neighbors) {
 			if(neighbor.isOwnerOf(newSpecs)) return neighbor;
-			else if (visitedNodes.contains(neighbor)) continue;
-			double distance = neighbor.calcMinDistanceTo(newSpecs);
+			double distance = neighbor.calcOptDistanceTo(newSpecs);
 			if(distance < minDist) {
 				minDist = distance;
 				winningNeighbor = neighbor;
 			}
 		}
-		visitedNodes.add(winningNeighbor);
 		return winningNeighbor;
 	}
-
+	
+	private double calcOptDistanceTo(CANNodeSpecs newSpecs) {
+		Double[] min = ownershipArea.get(0);
+		Double[] max = ownershipArea.get(1);
+		Double[] point = new Double[max.length];
+		Double[] target = newSpecs.getLocation();
+		for (int i = 0; i < max.length; i++) {
+			point[i] = Math.max(Math.min(max[i], target[i]),min[i]);
+		}
+		return euclideanDistance(target, point);
+	}
+	
 	private double calcMinDistanceTo(CANNodeSpecs newSpecs) {
 		Double[] max = ownershipArea.get(0);
 		Double[] min = ownershipArea.get(1);
