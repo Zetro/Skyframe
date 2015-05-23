@@ -85,12 +85,12 @@ public class CANNodeSpecs implements Protocol{
 		}
 		if (location[bestDimension] < dimDivision) {
 			myArea.get(1)[bestDimension] = dimDivision;
-			ownershipArea = myArea;
 			ownerArea.get(0)[bestDimension] = dimDivision;
 		} else {
 			myArea.get(0)[bestDimension] = dimDivision;
 			ownerArea.get(1)[bestDimension] = dimDivision;
 		}
+		ownershipArea = myArea;
 		ownerSpecs.giveDataTo(this);
 		ownerSpecs.getNeighbors().add(this);
 		ownerSpecs.giveNeighborsTo(this);
