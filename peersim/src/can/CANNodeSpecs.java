@@ -2,17 +2,9 @@ package can;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.ListIterator;
 
-import org.lsmp.djep.groupJep.GOperatorSet;
-
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
-
-import peersim.core.Node;
 import peersim.core.Protocol;
-
-import java.util.*;
 
 public class CANNodeSpecs implements Protocol{
 
