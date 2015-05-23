@@ -192,19 +192,17 @@ public class CANNodeSpecs implements Protocol{
 		this.neighbors = neighbors;
 	}
 
-	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs, HashSet<CANNodeSpecs> visitedNodes) {
+	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs) {
 		double minDist = Double.POSITIVE_INFINITY;
 		CANNodeSpecs winningNeighbor = null;
 		for (CANNodeSpecs neighbor : neighbors) {
 			if(neighbor.isOwnerOf(newSpecs)) return neighbor;
-			else if (visitedNodes.contains(neighbor)) continue;
 			double distance = neighbor.calcOptDistanceTo(newSpecs);
 			if(distance < minDist) {
 				minDist = distance;
 				winningNeighbor = neighbor;
 			}
 		}
-		visitedNodes.add(winningNeighbor);
 		return winningNeighbor;
 	}
 	

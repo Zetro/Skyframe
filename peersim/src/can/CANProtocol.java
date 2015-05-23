@@ -132,11 +132,9 @@ public class CANProtocol implements EDProtocol{
 			return;
 		}
 		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
-		HashSet<CANNodeSpecs> visitedNodes = new HashSet<CANNodeSpecs>();
-		visitedNodes.add(ownerNode);
 		while(!ownerNode.isOwnerOf(newSpecs)){
 			CANNodeSpecs oldNode = ownerNode;
-			ownerNode = ownerNode.findClosestNeighborTo(newSpecs,visitedNodes);
+			ownerNode = ownerNode.findClosestNeighborTo(newSpecs);
 		}
             System.out.println("Area: ");
             for (Double[] p : ownerNode.getOwnershipArea()) {
