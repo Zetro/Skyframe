@@ -26,7 +26,7 @@ public class CANNodeInitializer implements NodeInitializer{
 	public void initialize(Node n) {
     	cp = (CANProtocol) n.getProtocol(pid);
     	cd = (CANNodeSpecs) n.getProtocol(dim);
-    	cd.setDimensions(CANDataProvider.nextNodeInfo());
+    	cd.setLocation(CANDataProvider.nextNodeInfo());
     	cp.addNode(n);
 	}
 

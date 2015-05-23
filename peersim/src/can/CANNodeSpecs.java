@@ -9,15 +9,15 @@ import peersim.core.Protocol;
 
 public class CANNodeSpecs implements Protocol{
 
-	private Double[] dimensions;
+	private Double[] location;
 	private ArrayList<Double[]> ownershipArea;
 	private ArrayList<Double[]> ownedData;
 	private ArrayList<CANNodeSpecs> neighbors;
 
 	public CANNodeSpecs() {
-		setDimensions(new Double[6]);
-		for (int i = 0; i < dimensions.length; i++) {
-			dimensions[i] = -1.0;
+		setLocation(new Double[6]);
+		for (int i = 0; i < location.length; i++) {
+			location[i] = -1.0;
 		}
 		ownershipArea = new ArrayList<Double[]>();
 		ownedData = new ArrayList<Double[]>();
@@ -35,24 +35,24 @@ public class CANNodeSpecs implements Protocol{
 	}
 
 	public boolean isOwnerOf(CANNodeSpecs n) {
-		Double[] nDimensions = n.getDimensions();
+		Double[] nLocation = n.getLocation();
 		Double[] x_0 = ownershipArea.get(0);
 		Double[] x_1 = ownershipArea.get(1);
-		for (int i = 0; i < nDimensions.length; i++) {
-			Double coord_i = nDimensions[i];
+		for (int i = 0; i < nLocation.length; i++) {
+			Double coord_i = nLocation[i];
 			if(coord_i < x_0[i] || coord_i > x_1[i]) return false;
 		}
 		return true;
 	}
 	
 	public void getHalfZoneOf(CANNodeSpecs ownerSpecs) {
-		Double[] ownerDimensions = ownerSpecs.getDimensions();
+		Double[] ownerLocation = ownerSpecs.getLocation();
 		int bestDimension = -1;
 		double dimDivision = Double.MAX_VALUE;
 		ArrayList<Double[]> ownerArea = ownerSpecs.getOwnershipArea();
-		for (int i = 0; i < ownerDimensions.length; i++) {
-			if(ownerDimensions[i] == dimensions[i]) continue;
-			double t = (ownerDimensions[i] + dimensions[i])/2;
+		for (int i = 0; i < ownerLocation.length; i++) {
+			if(ownerLocation[i] == location[i]) continue;
+			double t = (ownerLocation[i] + location[i])/2;
 			double x_0 = (ownerArea.get(0))[i];
 			double x_1 = (ownerArea.get(1))[i];
 			double center = (x_0 + x_1)/2;
@@ -65,7 +65,7 @@ public class CANNodeSpecs implements Protocol{
 		//In case two node locations repeat. We can deal with this better later on.
 		if (bestDimension == -1) throw new RuntimeException("Two nodes at same position");
 		getOwnershipArea();
-		if (dimensions[bestDimension] < dimDivision) {
+		if (location[bestDimension] < dimDivision) {
 			ArrayList<Double[]> myArea = (ArrayList<Double[]>) ownerArea.clone();
 			myArea.get(1)[bestDimension] = dimDivision;
 			ownershipArea = myArea;
@@ -123,12 +123,12 @@ public class CANNodeSpecs implements Protocol{
 		newOwner.setOwnedData(giveAwayData);
 	}
 
-	public Double[] getDimensions() {
-		return dimensions;
+	public Double[] getLocation() {
+		return location;
 	}
 	
-	public void setDimensions(Double[] doubles) {
-		this.dimensions = doubles;
+	public void setLocation(Double[] doubles) {
+		this.location = doubles;
 	}
 
 	public ArrayList<Double[]> getOwnershipArea() {
