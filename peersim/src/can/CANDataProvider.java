@@ -15,15 +15,15 @@ public class CANDataProvider{
 
 	private static final String DATA_SOURCE_FILE = "dataSourceFile";
 	private static String dataSourceFile = Configuration.getString(DATA_SOURCE_FILE);
-	
+
 //	Loads the dataSet referred by DATA_SOURCE_FILE and return as an Arraylist of double's
 	public static ArrayList<Double[]> loadData() {
 		double maxValueOfData = Double.NEGATIVE_INFINITY;
 		ArrayList<Double[]> data = new ArrayList<Double[]>();;
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(dataSourceFile));
-			String line = br.readLine();
-			while(line != null){
+			String line;
+			while((line = br.readLine()) != null){
 				String[] temp = line.split(",");
 				Double dataDimensions[] = new Double[temp.length];
 				for (int i = 0; i < temp.length; i++) {
@@ -43,7 +43,7 @@ public class CANDataProvider{
 		}
 		return data;
 	}
-	
+
 	private static Double[] normalizeBy(Double[] doubles, double maxValueOfData) {
 		for (int i = 0; i < doubles.length; i++) {
 			doubles[i] = doubles[i] / maxValueOfData;
@@ -65,5 +65,5 @@ public class CANDataProvider{
 		Double[] randomCoord = {CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble(),CommonState.r.nextDouble()};
 		return  randomCoord;
 	}
-	
+
 }
