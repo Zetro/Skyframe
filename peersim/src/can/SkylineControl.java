@@ -28,9 +28,9 @@ public class SkylineControl implements Control {
 
     @Override
     public boolean execute() {
+        if (!true) return false;
         for(int i=0; i< Network.size(); i++){
             Node n = Network.get(i);
-            n = Network.get(i);
             System.out.println("Node: "+n);
             CANProtocol cp = (CANProtocol) n.getProtocol(pid);
             CANNodeSpecs cd = (CANNodeSpecs) n.getProtocol(dim);

@@ -1,5 +1,6 @@
 package algo;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,12 +58,19 @@ public class GSS {
 				Point p_md = comptePmd(localSkylinePoints, q);
 				System.out.println("pmd: "+p_md);
 				SearchRegion SR = computeSearchRegion(p_md, q);
+				System.out.println(SR);
 				// Partition SR into a disjoint set of subSRs for neighbornodes in RT(n)
 				Map<Object, SearchRegion> partition = partition(SR, n);
 				for (Object m : routing_table(n)) {
 					SearchRegion subSR = partition.get(m);
+					System.out.println(subSR + " "+partition.containsKey(m));
+					System.out.println(partition);
+					System.out.println(m);
 					if (isInChargeOf(m, subSR)) {
+						System.out.println("!!!");
 						sendGSS(m, q, subSR, 2);
+					} else {
+						System.out.println(":( " + subSR.regions.length);
 					}
 				}
 				// return local skyline points
@@ -128,8 +136,12 @@ public class GSS {
 				else if (q.dims[i] == Query.Component.Max && getRegion(m).dims[i].high < region.dims[i].high)
 					break neighbor;
 			}
+			return m;
 		}
 		System.out.println("No nearer node!");
+		for (CANNodeSpecs m : n.getNeighbors()) {
+			System.out.println(m);
+		}
 		return null;
 	}
 
@@ -160,9 +172,10 @@ public class GSS {
 		// give a sub search region to the current node
 		partition.put(n, sr.intersect(getRegion(n)));
 		sr = sr.subtract(getRegion(n));
+		System.out.println(sr);
 		// give a sub search region to each of its neighbors
 		for (Object m : routing_table(n)) {
-			partition.put(n, sr.intersect(getRegion(m)));
+			partition.put(m, sr.intersect(getRegion(m)));
 			sr = sr.subtract(getRegion(m));
 		}
 		// merge the unallocated of the search region with suitable neighbors
@@ -222,6 +235,19 @@ public class GSS {
 		SearchRegion full = new SearchRegion(new Region(full_ranges));
 		if (pmd == null)
 			return full;
-		return full.subtract(computeDominatingRegion(pmd, q));
+		System.out.println("----");
+		System.out.println(full);
+		Region dominating = computeDominatingRegion(pmd, q);
+		SearchRegion sr = full.subtract(dominating);
+		System.out.println(dominating);
+		System.out.println(sr);
+		System.out.println("----");
+		Region r = new Region(new Range(0, 1));
+		Region r2 = new Region(new Range(0, 0.2));
+		System.out.println(r + " " + r.hashCode());
+		System.out.println(r2 + " " + r2.hashCode());
+		System.out.println(Arrays.toString(r.subtract(r2)));
+		System.out.println("----");
+		return sr;
 	}
 }

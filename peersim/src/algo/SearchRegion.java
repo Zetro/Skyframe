@@ -1,5 +1,6 @@
 package algo;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class SearchRegion {
 
 	public SearchRegion intersect(Region r) {
 		List<Region> regions = new ArrayList<>();
-		for (Region search_region : regions) {
+		for (Region search_region : this.regions) {
 			Region inter = search_region.intersect(r);
 			if (inter != null)
 				regions.add(inter);
@@ -32,13 +33,14 @@ public class SearchRegion {
 
 	public SearchRegion subtract(Region r) {
 		List<Region> regions = new ArrayList<>();
-		for (Region search_region : regions) {
+		for (Region search_region : this.regions) {
 			Region inter = search_region.intersect(r);
+				System.out.println("> "+inter);
 			if (inter != null) {
 				Region[] sub = search_region.subtract(r);
 				for (Region region : sub) {
-					if (region != null) {
-						regions.add(inter);
+					if (!regions.contains(region)) {
+						regions.add(region);
 					}
 				}
 			} else if (!regions.contains(search_region)) {
@@ -55,5 +57,9 @@ public class SearchRegion {
 			}
 		}
 		return true;
+	}
+
+	public String toString() {
+		return Arrays.toString(regions);
 	}
 }

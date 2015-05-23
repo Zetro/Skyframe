@@ -11,7 +11,7 @@ public class Range {
 	}
 
 	public boolean isValid() {
-		return low <= high;
+		return low < high;
 	}
 	
 	@Override
@@ -31,7 +31,7 @@ public class Range {
 			return false;
 		}
 		final Range other = (Range) obj;
-		return true;
+		return low == other.low && high == other.high;
 	}
 
 	@Override

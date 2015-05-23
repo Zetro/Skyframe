@@ -38,10 +38,17 @@ public class Region {
 	private void addRegionIfValid(List<Region> regions, Range... dims) {
 		for (int i=0; i<dims.length; i++) {
 			if (dims[i].low < this.dims[i].low ||
-				dims[i].high > this.dims[i].high)
+				dims[i].high > this.dims[i].high) {
 				return;
+			}
 		}
 		Region r = new Region(dims);
+		System.out.println(r + " " + r.isValid() + " " + regions.contains(r));
+		System.out.println("O:"+regions);
+		if (regions.size() == 1) {
+			System.out.println(":"+regions.get(0).equals(r));
+		}
+		System.out.println();
 		if (r.isValid() && !regions.contains(r)) {
 			regions.add(r);
 		}
@@ -70,6 +77,8 @@ public class Region {
 			addRegionIfValid(regions, dims_low);
 			addRegionIfValid(regions, dims_high);
 		}
+		System.out.println("L:"+regions);
+		System.out.println();
 
 		return regions.toArray(new Region[regions.size()]);
 	}
@@ -99,6 +108,10 @@ public class Region {
 			return false;
 		}
 		final Region other = (Region) obj;
-		return true;
+		return Arrays.equals(dims, other.dims);
+	}
+
+	public String toString() {
+		return Arrays.toString(dims);
 	}
 }
