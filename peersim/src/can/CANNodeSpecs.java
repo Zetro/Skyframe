@@ -87,17 +87,25 @@ public class CANNodeSpecs implements Protocol{
 		}
 	}
 	
-	private static boolean areNeighbors(CANNodeSpecs one, CANNodeSpecs two) {
-		//TODO
-		ArrayList<Double[]> ownershipAreaOne = one.getOwnershipArea();
-		ArrayList<Double[]> ownershipAreaTwo = two.getOwnershipArea();
-		Double[] one_lowerBound = ownershipAreaOne.get(0);
-		Double[] one_upperBound = ownershipAreaOne.get(1);
-		Double[] two_lowerBound = ownershipAreaTwo.get(0);
-		Double[] two_upperBound = ownershipAreaTwo.get(1);
-		for (int i = 0; i < two_upperBound.length; i++) {
-			if(two_upperBound[i] == one_lowerBound[i]) return true;
-			if(one_upperBound[i] == two_lowerBound[i]) return true;
+	private static boolean areNeighbors(CANNodeSpecs a, CANNodeSpecs b) {
+		ArrayList<Double[]> ownershipAreaOne = a.getOwnershipArea();
+		ArrayList<Double[]> ownershipAreaTwo = b.getOwnershipArea();
+		Double[] a_min = ownershipAreaOne.get(0);
+		Double[] a_max = ownershipAreaOne.get(1);
+		Double[] b_min = ownershipAreaTwo.get(0);
+		Double[] b_max = ownershipAreaTwo.get(1);
+		
+		for (int i = 0; i < b_max.length; i++) {
+			if(Math.min(a_max[i], b_max[i]) == Math.max(a_min[i], b_min[i])){
+				for (int j = 0; j < b_max.length; j++) {
+					if(Math.min(a_max[j], b_max[j]) > Math.max(a_min[j], b_min[j]) || j == i){
+						  continue;
+					} else {
+						return false;
+					}
+				}
+				return true;
+			}
 		}
 		return false;
 	}
