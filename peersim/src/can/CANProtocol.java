@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import peersim.config.Configuration;
-import peersim.core.Network;
 import peersim.core.Node;
-import peersim.core.Protocol;
 import peersim.edsim.EDProtocol;
 
 import algo.GSS;
@@ -24,7 +22,7 @@ public class CANProtocol implements EDProtocol{
 	private Node root;
 
 	private static final String PAR_PROT = "protocol";
-	private static final String DIM_PROT = "dimensions";
+//	private static final String DIM_PROT = "dimensions";
 	private static final String SPEC_PROT = "nodespec";
 	private static int dim;
 	private static int spec;
@@ -37,7 +35,7 @@ public class CANProtocol implements EDProtocol{
 	public CANProtocol(String prefix) {
 		System.out.println("Protocol loading...");
 		spec = Configuration.getPid(prefix + "."+ SPEC_PROT);
-		dim = Configuration.getInt(DIM_PROT);
+//		dim = Configuration.getInt(prefix + "." + DIM_PROT);
 		networkData = CANDataProvider.loadData();
 		nodes = new HashMap<>();
 		System.out.println("Protocol loaded: "+dim);
