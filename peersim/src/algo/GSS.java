@@ -128,9 +128,9 @@ public class GSS {
 		for (CANNodeSpecs m : n.getNeighbors()) {
 			for (int i=0; i<q.dims.length; i++) {
 				if (q.dims[i] == Query.Component.Min && getRegion(m).dims[i].low > region.dims[i].low)
-					break neighbor;
+					continue neighbor;
 				else if (q.dims[i] == Query.Component.Max && getRegion(m).dims[i].high < region.dims[i].high)
-					break neighbor;
+					continue neighbor;
 			}
 			return m;
 		}

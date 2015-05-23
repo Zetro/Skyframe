@@ -35,11 +35,16 @@ public class SkylineControl implements Control {
             CANProtocol cp = (CANProtocol) n.getProtocol(pid);
             CANNodeSpecs cd = (CANNodeSpecs) n.getProtocol(dim);
             List<Double[]> area = cd.getOwnershipArea();
+            System.out.println("Node: "+cd);
             System.out.println("Area: ");
             for (Double[] p : area) {
                 System.out.println(Arrays.toString(p));
             }
-            System.out.println("Nodes: "+cp.nodes.size());
+            System.out.println("Neighbors: ");
+            for (CANNodeSpecs m : cd.getNeighbors()) {
+                System.out.println(m);
+            }
+            System.out.println();
         }
 
         Node node = Network.get(0);
