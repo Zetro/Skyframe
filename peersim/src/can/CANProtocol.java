@@ -2,12 +2,12 @@ package can;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import peersim.config.Configuration;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
-
 import algo.GSS;
 import algo.Point;
 import algo.Query;
@@ -92,9 +92,11 @@ public class CANProtocol implements EDProtocol{
 			return;
 		}
 		CANNodeSpecs ownerNode = (CANNodeSpecs) root.getProtocol(spec);
+		HashSet<CANNodeSpecs> visitedNodes = new HashSet<CANNodeSpecs>();
+		visitedNodes.add(ownerNode);
 		while(!ownerNode.isOwnerOf(newSpecs)){
 			//System.out.println(ownerNode.hashCode());
-			ownerNode = ownerNode.findClosestNeighborTo(newSpecs);
+			ownerNode = ownerNode.findClosestNeighborTo(newSpecs,visitedNodes);
 		}
             System.out.println("Area: ");
             for (Double[] p : ownerNode.getOwnershipArea()) {
