@@ -1,10 +1,13 @@
 package can;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ListIterator;
 
 import org.lsmp.djep.groupJep.GOperatorSet;
+
+import com.sun.org.apache.xalan.internal.xsltc.compiler.sym;
 
 import peersim.core.Node;
 import peersim.core.Protocol;
@@ -82,16 +85,16 @@ public class CANNodeSpecs implements Protocol{
 		}
 		if (location[bestDimension] < dimDivision) {
 			myArea.get(1)[bestDimension] = dimDivision;
-			ownershipArea = myArea;
 			ownerArea.get(0)[bestDimension] = dimDivision;
 		} else {
 			myArea.get(0)[bestDimension] = dimDivision;
 			ownerArea.get(1)[bestDimension] = dimDivision;
 		}
+		ownershipArea = myArea;
 		ownerSpecs.giveDataTo(this);
 		ownerSpecs.getNeighbors().add(this);
-		neighbors.add(ownerSpecs);
 		ownerSpecs.giveNeighborsTo(this);
+		neighbors.add(ownerSpecs);
 	}
 
 	private void giveNeighborsTo(CANNodeSpecs newOwner) {
@@ -99,8 +102,14 @@ public class CANNodeSpecs implements Protocol{
 		ListIterator<CANNodeSpecs> iterator = neighbors.listIterator();
 		while(iterator.hasNext()){
 			CANNodeSpecs next = iterator.next();
-			if(areNeighbors(newOwner, next)) newOwnerNeighbors.add(next);
-			if(!areNeighbors(next, this)) iterator.remove();
+			if(areNeighbors(newOwner, next)){
+				newOwnerNeighbors.add(next);
+				next.getNeighbors().add(newOwner);
+			}
+			if(!areNeighbors(next, this)){
+				next.getNeighbors().remove(this);
+				iterator.remove();
+			}
 		}
 		newOwner.setNeighbors(newOwnerNeighbors);
 	}
@@ -191,17 +200,19 @@ public class CANNodeSpecs implements Protocol{
 		this.neighbors = neighbors;
 	}
 
-	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs) {
+	public CANNodeSpecs findClosestNeighborTo(CANNodeSpecs newSpecs, HashSet<CANNodeSpecs> visitedNodes) {
 		double minDist = Double.POSITIVE_INFINITY;
 		CANNodeSpecs winningNeighbor = null;
 		for (CANNodeSpecs neighbor : neighbors) {
 			if(neighbor.isOwnerOf(newSpecs)) return neighbor;
+			else if (visitedNodes.contains(neighbor)) continue;
 			double distance = neighbor.calcMinDistanceTo(newSpecs);
 			if(distance < minDist) {
 				minDist = distance;
 				winningNeighbor = neighbor;
 			}
 		}
+		visitedNodes.add(winningNeighbor);
 		return winningNeighbor;
 	}
 
