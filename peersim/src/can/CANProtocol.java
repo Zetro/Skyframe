@@ -9,6 +9,8 @@ import peersim.config.Configuration;
 import peersim.core.Node;
 import peersim.edsim.EDProtocol;
 import algo.GSS;
+import static algo.GSS.comptePmd;
+import static algo.GSS.computeSearchRegion;
 import algo.Point;
 import algo.Query;
 import algo.Region;
@@ -33,6 +35,10 @@ public class CANProtocol implements EDProtocol{
 	private static SearchRegion searchRegion;
 	private static HashSet<Region> processed;
 	private static List<Point> points;
+	
+	private static HashSet<CANNodeSpecs> borderNodes;
+	private static Queue<Region> regionQueue;
+	private static Query query;
 
 	private static boolean verbose = false;
 
@@ -120,6 +126,70 @@ public class CANProtocol implements EDProtocol{
 			GSS gss = new GSS((Node) params[0], pid, spec);
 			gss.greedySkylineSearch(node, (Query) params[1], (SearchRegion) params[2], (int) params[3]);
 			nodesInvolved.add(node.getID());
+		} else if ("rss_init".equals(msg.type)) {
+			searchRegion = null;
+			borderNodes = new HashSet<>();
+			regionQueue = new LinkedList<>();
+			points = new ArrayList<>();
+			query = (Query) msg.o;
+
+			if (verbose)
+				System.out.println("Query: "+msg.o);
+			GSS gss = new GSS(node, pid, spec);
+			gss.relaxedSkylineSearch(node, (Query) msg.o, -1, null, 1, new HashSet<>());
+			nodesInvolved.add(node.getID());
+		} else if ("rss_next".equals(msg.type)) {
+			Object[] params = (Object[]) msg.o;
+			GSS gss = new GSS((Node) params[0], pid, spec);
+			gss.relaxedSkylineSearch(node, (Query) params[1], (int) params[2], (SearchRegion) params[3], (int) params[4], (Set<Long>) params[5]);
+			nodesInvolved.add(node.getID());
+		} else if ("rss_result".equals(msg.type)) {
+			Object[] params = (Object[]) msg.o;
+			List<Point> localSkylinePoints = (List<Point>) params[0];
+			CANNodeSpecs source = (CANNodeSpecs) params[1];
+			Region region = GSS.getRegion(source);
+			regionQueue.add(region);
+			if (verbose)
+				System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size());
+			points.addAll(localSkylinePoints);
+		
+			if (searchRegion != null) {
+				while (!regionQueue.isEmpty()) {
+					Region r = regionQueue.poll();
+					searchRegion = searchRegion.subtract(r);
+					if (searchRegion.regions.length == 0) {
+						if (verbose) {
+							System.out.println("Query done!");
+							System.out.println("Skyline: "+points.size());
+						}
+						System.out.println(nodesInvolved.size());
+						System.out.println(messageCount);
+					}
+				}
+			} else {
+				borderNodes.add(source);
+				if (GSS.isSqStarter(source, query)) {
+					Point p_md = comptePmd(localSkylinePoints, query);
+					if (verbose)
+						System.out.println("pmd: "+p_md);
+					searchRegion = computeSearchRegion(p_md, query);
+					GSS gss = new GSS(node, pid, spec);
+					for (CANNodeSpecs borderNode : borderNodes) {
+						Region r = GSS.getRegion(borderNode);
+						searchRegion = searchRegion.subtract(r);
+					}
+					SearchRegion sr = new SearchRegion(searchRegion.regions);
+					for (CANNodeSpecs borderNode : borderNodes) {
+						Region r = GSS.getRegion(borderNode);
+						SearchRegion[] res = GSS.computeConnectedRegion(new SearchRegion(r), sr);
+						SearchRegion con = res[0];
+						sr = res[1];
+						if (con.regions.length > 0) {
+							gss.sendRSS(borderNode, query, -1, con, 2, null);
+						}
+					}
+				}
+			}
 		} else {
 			System.err.println("Unknown event: " + msg.type);
 		}

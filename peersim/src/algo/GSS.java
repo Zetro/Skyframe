@@ -1,6 +1,5 @@
 package algo;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +9,7 @@ import java.util.Map;
 import can.CANNodeSpecs;
 import can.CANProtocol;
 import can.EventMessage;
+import java.util.Set;
 import peersim.core.Network;
 import peersim.core.Node;
 import peersim.edsim.EDSimulator;
@@ -33,6 +33,11 @@ public class GSS {
 		return cp.nodes.get(n.getNodeId());
 	}
 
+	public void sendRSS(Object n, Query q, int dim, SearchRegion sr, int p, Set<Long> sp) {
+		Node node = getNode((CANNodeSpecs) n);
+		EventMessage msg = new EventMessage("rss_next", new Object[]{qi,q,dim,sr,p,sp});
+		EDSimulator.add(1, msg, node, pid);
+	}
 	public void sendGSS(Object n, Query q, SearchRegion sr, int p) {
 		Node node = getNode((CANNodeSpecs) n);
 		EventMessage msg = new EventMessage("gss_next", new Object[]{qi,q,sr,p});
@@ -42,10 +47,18 @@ public class GSS {
 		EventMessage msg = new EventMessage("gss_result", new Object[]{localSkylinePoints,region});
 		EDSimulator.add(1, msg, node, pid);
 	}
+	public void sendRSSResult(Node node, List<Point> localSkylinePoints, CANNodeSpecs source) {
+		EventMessage msg = new EventMessage("rss_result", new Object[]{localSkylinePoints,source});
+		EDSimulator.add(1, msg, node, pid);
+	}
 
 	public void greedySkylineSearch(Node node, Query q, SearchRegion sr, int p) {
 		CANNodeSpecs n = (CANNodeSpecs) node.getProtocol(spec);
 		greedySkylineSearch(n, q, sr, p);
+	}
+	public void relaxedSkylineSearch(Node node, Query q, int d, SearchRegion sr, int p, Set<Long> sp) {
+		CANNodeSpecs n = (CANNodeSpecs) node.getProtocol(spec);
+		relaxedSkylineSearch(n, q, d, sr, p, sp);
 	}
 
 	public void greedySkylineSearch(CANNodeSpecs n, Query q, SearchRegion sr, int p) {
@@ -97,6 +110,68 @@ public class GSS {
 		}
 	}
 
+	public void relaxedSkylineSearch(CANNodeSpecs n, Query q, int d, SearchRegion sr, int p, Set<Long> sp) {
+		if (verbose)
+			System.out.println("Running RSS (phase "+p+") "+n);
+		if (n == null) {
+			System.err.println("Node is null!");
+			return;
+		}
+
+		if (p == 1) {
+			if (d == -1) {
+				for (int dim=0; dim<q.dims.length; dim++) {
+					CANNodeSpecs x = findNearerToBorder(n, q, dim);
+					Set<Long> set = new HashSet<>();
+					set.add(x.getNodeId());
+					sendRSS(x, q, dim, null, 1, set);
+				}
+			} else if (isBorderNode(n, q, d)) {
+				List<Point> localSkylinePoints = computeSkylinePoints(n, q);
+				// return local skyline points
+				sendRSSResult(qi, localSkylinePoints, n);
+				// for all neighbor Border Node nn at dimension d
+				for (CANNodeSpecs nn : routing_table(n)) {
+					if (isBorderNode(nn, q, d)) {
+						// if nn does not exist in the search path from the QUERY INITIATOR to n
+						if (!sp.contains(nn.getNodeId())) {
+							sp.add(nn.getNodeId());
+							sendRSS(nn, q, d, null, 1, sp);
+						}
+					}
+				}
+			} else {
+				CANNodeSpecs x = findNearerToBorder(n, q, d);
+				Set<Long> set = new HashSet<>();
+				set.add(x.getNodeId());
+				sendRSS(x, q, d, null, 1, set);
+			}
+		} else if (p == 2) {
+			List<Point> localSkylinePoints = computeSkylinePoints(n, q);
+			boolean any = false;
+			for (int dim=0; dim<q.dims.length; dim++) {
+				if (isBorderNode(n, q, dim)) {
+					any = true;
+					break;
+				}
+			}
+			if (!any) {
+				// return local skyline points
+				sendRSSResult(qi, localSkylinePoints, n);
+			}
+			if (!sr.isCoveredBy(getRegion(n))) {
+				SearchRegion SR = sr.subtract(getRegion(n));
+				Map<Object, SearchRegion> partition = partition(SR, n);
+				for (Object m : routing_table(n)) {
+					SearchRegion subSR = partition.get(m);
+					if (isInChargeOf(m, subSR)) {
+						sendRSS(m, q, d, subSR, 2, sp);
+					}
+				}
+			}
+		}
+	}
+	
 	public static Region getRegion(Object node) {
 		CANNodeSpecs n = (CANNodeSpecs) node;
 		List<Double[]> ownershipArea = n.getOwnershipArea();
@@ -118,6 +193,16 @@ public class GSS {
 		}
 		return true;
 	}
+	
+	public static boolean isBorderNode(Object node, Query q, int d) {
+		CANNodeSpecs n = (CANNodeSpecs) node;
+		Region region = getRegion(n);
+		if (q.dims[d] == Query.Component.Min && region.dims[d].low > 0)
+			return false;
+		else if (q.dims[d] == Query.Component.Max && region.dims[d].high < 1)
+			return false;
+		return true;
+	}
 
 	public static boolean isInChargeOf(Object node, SearchRegion sr) {
 		 // todo? same as in python version but makes no sense
@@ -130,6 +215,19 @@ public class GSS {
 		return false;
 	}
 
+	public static CANNodeSpecs findNearerToBorder(CANNodeSpecs node, Query q, int d) {
+		CANNodeSpecs n = (CANNodeSpecs) node;
+		Region region = getRegion(n);
+		for (CANNodeSpecs m : n.getNeighbors()) {
+			if (q.dims[d] == Query.Component.Min && getRegion(m).dims[d].low >= region.dims[d].low)
+				continue;
+			else if (q.dims[d] == Query.Component.Max && getRegion(m).dims[d].high <= region.dims[d].high)
+				continue;
+			return m;
+		}
+		return node;
+	}
+	
 	public static Object findNearerNode(Object node, Query q) {
 		CANNodeSpecs n = (CANNodeSpecs) node;
 		Region region = getRegion(n);
@@ -150,9 +248,9 @@ public class GSS {
 		return null;
 	}
 
-	public static List<Object> routing_table(Object node) {
+	public static List<CANNodeSpecs> routing_table(Object node) {
 		CANNodeSpecs n = (CANNodeSpecs) node;
-		List<Object> neighbors = new ArrayList<>();
+		List<CANNodeSpecs> neighbors = new ArrayList<>();
 		for (CANNodeSpecs neighbor : n.getNeighbors()) {
 			neighbors.add(neighbor);
 		}

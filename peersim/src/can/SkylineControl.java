@@ -59,7 +59,7 @@ public class SkylineControl implements Control {
         for (int i=0; i< query.length; i++) {
         	query[i] = Query.Component.Min;
         }
-        EventMessage msg = new EventMessage("gss_init", new Query(query));
+        EventMessage msg = new EventMessage("rss_init", new Query(query));
         EDSimulator.add(1, msg, node, pid);
         return false;
     }
