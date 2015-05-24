@@ -2,6 +2,7 @@ package algo;
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class SearchRegion {
@@ -32,17 +33,15 @@ public class SearchRegion {
 	}
 
 	public SearchRegion subtract(Region r) {
-		List<Region> regions = new ArrayList<>();
+		HashSet<Region> regions = new HashSet<>();
 		for (Region search_region : this.regions) {
 			Region inter = search_region.intersect(r);
 			if (inter != null) {
 				Region[] sub = search_region.subtract(r);
 				for (Region region : sub) {
-					if (!regions.contains(region)) {
 						regions.add(region);
-					}
 				}
-			} else if (!regions.contains(search_region)) {
+			} else {
 				regions.add(search_region);
 			}
 		}

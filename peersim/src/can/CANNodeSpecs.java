@@ -10,6 +10,7 @@ public class CANNodeSpecs implements Protocol{
 
 	private long nodeId;
 	private Double[] location;
+	private int depth;
 	private ArrayList<Double[]> ownershipArea;
 	private ArrayList<Double[]> ownedData;
 	private ArrayList<CANNodeSpecs> neighbors;
@@ -19,6 +20,7 @@ public class CANNodeSpecs implements Protocol{
 		for (int i = 0; i < location.length; i++) {
 			location[i] = -1.0;
 		}
+		depth = 0;
 		ownershipArea = new ArrayList<Double[]>();
 		ownedData = new ArrayList<Double[]>();
 		setNeighbors(new ArrayList<CANNodeSpecs>());
@@ -47,9 +49,9 @@ public class CANNodeSpecs implements Protocol{
 
 	public void getHalfZoneOf(CANNodeSpecs ownerSpecs) {
 		Double[] ownerLocation = ownerSpecs.getLocation();
-		int bestDimension = -1;
-		double dimDivision = Double.MAX_VALUE;
 		ArrayList<Double[]> ownerArea = ownerSpecs.getOwnershipArea();
+		/*int bestDimension = -1;
+		double dimDivision = Double.MAX_VALUE;
 		for (int i = 0; i < ownerLocation.length; i++) {
 			if(ownerLocation[i] == location[i]) continue;
 			double t = (ownerLocation[i] + location[i])/2;
@@ -61,7 +63,9 @@ public class CANNodeSpecs implements Protocol{
 				bestDimension = i;
 				dimDivision = t;
 			}
-		}
+		}*/
+		int bestDimension = (ownerSpecs.depth + 1) % ownerLocation.length;
+		double dimDivision = (ownerLocation[bestDimension] + location[bestDimension]) / 2;
 		//In case two node locations repeat. We can deal with this better later on.
 		if (bestDimension == -1) throw new RuntimeException("Two nodes at same position");
 		getOwnershipArea();
@@ -87,6 +91,8 @@ public class CANNodeSpecs implements Protocol{
 		ownerSpecs.getNeighbors().add(this);
 		ownerSpecs.giveNeighborsTo(this);
 		neighbors.add(ownerSpecs);
+		ownerSpecs.depth += 1;
+		depth = ownerSpecs.depth;
 	}
 
 	private void giveNeighborsTo(CANNodeSpecs newOwner) {
@@ -113,20 +119,19 @@ public class CANNodeSpecs implements Protocol{
 		Double[] a_max = ownershipAreaOne.get(1);
 		Double[] b_min = ownershipAreaTwo.get(0);
 		Double[] b_max = ownershipAreaTwo.get(1);
-		
+		boolean foundBorder = false;
 		for (int i = 0; i < b_max.length; i++) {
 			if(Math.min(a_max[i], b_max[i]) == Math.max(a_min[i], b_min[i])){
-				for (int j = 0; j < b_max.length; j++) {
-					if(Math.min(a_max[j], b_max[j]) > Math.max(a_min[j], b_min[j]) || j == i){
-						  continue;
-					} else {
-						return false;
-					}
+				if (foundBorder) {
+					return false;
 				}
-				return true;
+				foundBorder = true;
+			}
+			if(Math.min(a_max[i], b_max[i]) < Math.max(a_min[i], b_min[i])){
+				  return false;
 			}
 		}
-		return false;
+		return foundBorder;
 	}
 
 	private void giveDataTo(CANNodeSpecs newOwner) {

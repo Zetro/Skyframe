@@ -31,13 +31,13 @@ public class CANProtocol implements EDProtocol{
 	private ArrayList<Double[]> networkData;
 
 	private static SearchRegion searchRegion;
-	private static List<Region> processed;
+	private static HashSet<Region> processed;
 	private static List<Point> points;
 
 	private static boolean verbose = false;
 
-	private HashSet<Long> nodesInvolved = new HashSet<>();;
-	private int messageCount;
+	public static HashSet<Long> nodesInvolved = new HashSet<>();
+	public static int messageCount;
 
 	public CANProtocol(String prefix) {
 		if (verbose)
@@ -78,7 +78,7 @@ public class CANProtocol implements EDProtocol{
 			System.out.println("Event msg: "+msg.type+", "+msg.o);
 		if ("gss_init".equals(msg.type)) {
 			searchRegion = null;
-			processed = new ArrayList<>();
+			processed = new HashSet<>();
 			points = new ArrayList<>();
 
 			if (verbose)
@@ -95,18 +95,15 @@ public class CANProtocol implements EDProtocol{
 			Region region = (Region) params[1];
 			processed.add(region);
 			if (verbose)
-				System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size());
+				System.out.println("Recieved results: "+localSkylinePoints.size() +" "+ points.size() + " " + processed.size());
 			/*for (Point sp : localSkylinePoints) {
 				System.out.println(sp);
 			}*/
 			points.addAll(localSkylinePoints);
 
 			if (searchRegion != null) {
-				SearchRegion sr = searchRegion;
-				for (Region r : processed) {
-					sr = sr.subtract(r);
-				}
-				if (sr.regions.length == 0) {
+				searchRegion = searchRegion.subtract(region);
+				if (searchRegion.regions.length == 0) {
 					if (verbose) {
 						System.out.println("Query done!");
 						System.out.println("Skyline: "+points.size());

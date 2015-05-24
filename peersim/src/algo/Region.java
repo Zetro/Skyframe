@@ -2,6 +2,7 @@ package algo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class Region {
@@ -35,7 +36,7 @@ public class Region {
 		return new Region(dims);
 	}
 
-	private void addRegionIfValid(List<Region> regions, Range... dims) {
+	private void addRegionIfValid(HashSet<Region> regions, Range... dims) {
 		for (int i=0; i<dims.length; i++) {
 			if (dims[i].low < this.dims[i].low ||
 				dims[i].high > this.dims[i].high) {
@@ -49,7 +50,7 @@ public class Region {
 	}
 
 	public Region[] subtract(Region r2) {
-		List<Region> regions = new ArrayList<>();
+		HashSet<Region> regions = new HashSet<>();
 
 		for (int j=0; j<dims.length; j++) {
 			Range[] dims_low = new Range[dims.length];
@@ -98,13 +99,19 @@ public class Region {
 	}
 
 	public boolean borders(Region other) {
-		// todo: in some better way
+		boolean foundBorder = false;
 		for (int i=0; i<dims.length; i++) {
-			Region r = expand(other, i);
-			if (intersect(r) != null)
-				return true;
+			if(Math.min(dims[i].high, other.dims[i].high) == Math.max(dims[i].low, other.dims[i].low)){
+				if (foundBorder) {
+					return false;
+				}
+				foundBorder = true;
+			}
+			if(Math.min(dims[i].high, other.dims[i].high) < Math.max(dims[i].low, other.dims[i].low)) {
+				return false;
+			}
 		}
-		return false;
+		return foundBorder;
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package algo;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -199,14 +200,15 @@ public class GSS {
 				if (a.borders(b)) {
 					unallocated = unallocated.subtract(b);
 					connected = connected.union(new SearchRegion(b));
-					SearchRegion[] res = computeConnectedRegion(connected, unallocated);
-					SearchRegion con = res[0];
-					unallocated = res[1];
-					connected = connected.union(con);
 				}
 			}
 		}
-		return new SearchRegion[] {connected,unallocated};
+		if (unallocated.regions.length == 0 || connected.regions.length == 0) {
+			return new SearchRegion[] {connected, unallocated};
+		}
+		SearchRegion[] res = computeConnectedRegion(connected, unallocated);
+		connected = connected.union(res[0]);
+		return new SearchRegion[] {connected,res[1]};
 	}
 
 	public static List<Point> computeSkylinePoints(Object n, Query q) {
