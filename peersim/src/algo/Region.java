@@ -21,6 +21,24 @@ public class Region {
 		}
 		return true;
 	}
+	
+	public boolean hasIntersection(Region r2) {
+		for (int i=0; i<dims.length; i++) {
+			if (Math.min(dims[i].high, r2.dims[i].high) < Math.max(dims[i].low, r2.dims[i].low)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean contains(Region r2) {
+		for (int i=0; i<dims.length; i++) {
+			if(dims[i].low > r2.dims[i].low || dims[i].high < r2.dims[i].high) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	public Region intersect(Region r2) {
 		Range[] dims = new Range[this.dims.length];
@@ -51,28 +69,45 @@ public class Region {
 
 	public Region[] subtract(Region r2) {
 		HashSet<Region> regions = new HashSet<>();
-
-		for (int j=0; j<dims.length; j++) {
-			Range[] dims_low = new Range[dims.length];
-			Range[] dims_high = new Range[dims.length];
-
-			for (int i=0; i<dims.length; i++) {
-				Range dim_low, dim_high;
-				if (i == j) {
-					dim_low = new Range(dims[i].low, r2.dims[i].low);
-					dim_high = new Range(r2.dims[i].high, dims[i].high);
-				} else {
-					dim_low = new Range(dims[i].low, dims[i].high);
-					dim_high = new Range(dims[i].low, dims[i].high);
-				}
-				dims_low[i] = dim_low;
-				dims_high[i] = dim_high;
-			}
-
-			addRegionIfValid(regions, dims_low);
-			addRegionIfValid(regions, dims_high);
+		
+		if (r2.contains(this)) {
+			return new Region[0];
 		}
 
+		for (int j=0; j<dims.length; j++) {
+			Range[] highdims = new Range[dims.length];
+			Range[] lowdims = new Range[dims.length];
+			boolean skip = false;
+			boolean hashigh = false;
+			boolean haslow = false;
+			for (int i=0; i<dims.length; i++) {
+				Range highdim, lowdim;
+				highdim = new Range(dims[i].low, dims[i].high);
+				lowdim = new Range(dims[i].low, dims[i].high);
+				if (i == j) {
+					if(dims[i].low < r2.dims[i].low) {
+						lowdim = new Range(dims[i].low, r2.dims[i].low);
+						haslow = true;
+					}
+					if (r2.dims[i].high < dims[i].high) {
+						highdim = new Range(r2.dims[i].high, dims[i].high);
+						hashigh = true;
+					}
+					if (! (hashigh || haslow)) {
+						skip = true;
+						break;
+					}
+				}
+				lowdims[i] = lowdim;
+				highdims[i] = highdim;
+			}
+			if (skip) { continue; }
+
+			if (hashigh)
+				regions.add(new Region(highdims));
+			if (haslow)
+				regions.add(new Region(lowdims));
+		}
 		return regions.toArray(new Region[regions.size()]);
 	}
 

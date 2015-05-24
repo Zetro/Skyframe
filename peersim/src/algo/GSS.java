@@ -198,8 +198,8 @@ public class GSS {
 		for (Region a : sr.regions) {
 			for (Region b : unallocated.regions) {
 				if (a.borders(b)) {
+					connected = connected.union(b);
 					unallocated = unallocated.subtract(b);
-					connected = connected.union(new SearchRegion(b));
 				}
 			}
 		}

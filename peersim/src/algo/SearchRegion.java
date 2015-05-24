@@ -21,6 +21,18 @@ public class SearchRegion {
 			regions.add(region);
 		return new SearchRegion(regions.toArray(new Region[regions.size()]));
 	}
+	
+	public SearchRegion union(Region r2) {
+		boolean add = true;
+		List<Region> regions = new ArrayList<>();
+		for (Region r: this.regions) {
+			regions.add(r);
+			if (r.contains(r2)) { add = false; }
+		}
+		if (add)
+			regions.add(r2);
+		return new SearchRegion(regions.toArray(new Region[regions.size()]));
+	}
 
 	public SearchRegion intersect(Region r) {
 		List<Region> regions = new ArrayList<>();
@@ -35,8 +47,7 @@ public class SearchRegion {
 	public SearchRegion subtract(Region r) {
 		HashSet<Region> regions = new HashSet<>();
 		for (Region search_region : this.regions) {
-			Region inter = search_region.intersect(r);
-			if (inter != null) {
+			if (search_region.hasIntersection(r)) {
 				Region[] sub = search_region.subtract(r);
 				for (Region region : sub) {
 						regions.add(region);
